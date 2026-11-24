@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dual Wield Keyboard — モック（案内をもとにした版）</title>
+<!--
+  モック。公開しない。
+  テイストは 80 年代の縦スクロールのシューティング（上から見た森と地上絵・銀色の文字・空と地上の 2 つの武器）。
+  元のゲームの絵・ロゴ・名前・音は使わず、絵はすべてこのファイルの中で描く。外の物を読み込まない。
+-->
+<style>
+  :root {
+    --forest: #1d3f1c;
+    --sea: #1A8FD8;
+    --sand: #EDE8DC;
+    --ink: #0b0f14;
+    --hud: #f4f4f4;
+    --alert: #ff3b30;
+    --pixel: 4px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink);
+    color: var(--hud);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    overflow-x: hidden;
+  }
+  /* 地形と自機は画面に固定。文の区切りがその上を流れる */
+  #terrain, #sprites {
+    position: fixed; inset: 0; width: 100vw; height: 100vh;
+    image-rendering: pixelated;
+  }
+  #terrain { z-index: 0; }
+  #sprites { z-index: 2; pointer-events: none; }
+  main { position: relative; z-index: 3; }
+
+  /* 上の帯（得点表示の代わりに、いまの AREA を出す） */
+  .hud {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 4;
+    display: flex; align-items: center; gap: 28px;
+    padding: 14px 28px;
+    font: 700 13px/1 ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: .18em;
+    background: linear-gradient(#000c, #0000);
+  }
+  .hud .tag { color: var(--hud); text-decoration: none; }
+  .hud nav { display: flex; gap: 22px; margin-left: auto; }
+  .hud a { color: var(--hud); text-decoration: none; }
+  .hud a:hover { color: var(--sea); }
+  .hud .store {
+    border: 2px solid var(--hud); padding: 8px 12px;
+    box-shadow: 4px 4px 0 var(--sea);
+  }
+  @media (max-width: 900px) { .hud nav a:not(.store) { display: none; } }
+
+  section {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 120px 8vw;
+  }
+  .area {
+    font: 700 14px/1 ui-monospace, "SF Mono", Menlo, monospace;
+    letter-spacing: .3em; color: var(--alert);
+    margin-bottom: 18px;
+  }
+  .area b { color: var(--hud); }
+  h2 {
+    font-size: clamp(30px, 5vw, 60px); font-weight: 900; line-height: 1.2;
+    text-shadow: 4px 4px 0 #000, 0 0 24px #0008;
+  }
+  h2 .dot { color: var(--sea); }
+  p.lead {
+    margin-top: 20px; max-width: 34em;
+    font-size: clamp(16px, 1.6vw, 20px); line-height: 1.9; font-weight: 600;
+    text-shadow: 2px 2px 0 #000;
+  }
+  /* ドット絵の窓（ゲームの画面の中の文字の枠） */
+  .panel {
+    background: #000d;
+    border: var(--pixel) solid var(--hud);
+    box-shadow: 0 0 0 var(--pixel) #000, var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+    padding: 24px 28px;
+  }
+  .row { display: grid; gap: 28px; margin-top: 40px; }
+  .row.three { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .row.four  { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .panel .no {
+    font: 700 12px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em;
+    color: var(--sea); margin-bottom: 12px;
+  }
+  .panel h3 { font-size: 22px; font-weight: 900; margin-bottom: 10px; }
+  .panel p { line-height: 1.8; font-size: 15px; color: #d8d8d8; }
+  .panel canvas { width: 100%; image-rendering: pixelated; margin-bottom: 14px; display: block; }
+
+  /* 表紙 */
+  #top { align-items: center; text-align: center; }
+  .title {
+    display: flex; flex-direction: column; align-items: center;
+    background: #05080c; padding: 36px 44px;
+    border: var(--pixel) solid var(--hud);
+    box-shadow: var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+  }
+  #logo { width: min(84vw, 900px); image-rendering: pixelated; display: block; }
+  #logo2 { width: min(56vw, 600px); image-rendering: pixelated; display: block; margin-top: 18px; }
+  h1 {
+    margin-top: 26px;
+    font: 800 clamp(24px, 3vw, 40px)/1.2 -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: .08em; text-shadow: 3px 3px 0 #000;
+  }
+  #top .lead { margin: 34px auto 0; text-align: center; }
+  .blink {
+    margin-top: 48px;
+    font: 700 16px/1 ui-monospace, Menlo, monospace; letter-spacing: .4em;
+    animation: blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* 2 つの武器の説明（右で打つ・左で選ぶ） */
+  .weapons { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 40px; max-width: 900px; }
+  @media (max-width: 700px) { .weapons { grid-template-columns: 1fr; } }
+  .weapons .key {
+    display: inline-block; font: 700 12px/1 ui-monospace, Menlo, monospace;
+    border: 2px solid currentColor; padding: 6px 8px; margin-bottom: 12px; letter-spacing: .2em;
+  }
+  .left  .key { color: var(--sea); }
+  .right .key { color: var(--alert); }
+
+  /* 料金（コインを入れる画面の見立て） */
+  .coin { text-align: center; }
+  .coin .credit {
+    font: 900 clamp(48px, 9vw, 120px)/1 ui-monospace, Menlo, monospace;
+    letter-spacing: .05em; text-shadow: 6px 6px 0 var(--sea), 10px 10px 0 #000;
+  }
+  .coin .credit small { font-size: .35em; letter-spacing: .1em; }
+  .coin .sub { margin-top: 18px; font: 700 15px/1.8 ui-monospace, Menlo, monospace; letter-spacing: .2em; }
+  .start {
+    display: inline-block; margin-top: 44px;
+    font: 900 18px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em;
+    color: var(--ink); background: var(--hud); padding: 18px 26px; text-decoration: none;
+    box-shadow: 6px 6px 0 var(--sea), 6px 6px 0 2px #000;
+  }
+  .start:hover { background: var(--sea); color: var(--hud); }
+
+  footer {
+    position: relative; z-index: 1; background: #000;
+    padding: 36px 8vw; display: flex; flex-wrap: wrap; gap: 24px;
+    font: 600 13px/1.6 ui-monospace, Menlo, monospace; letter-spacing: .1em; color: #aaa;
+  }
+  footer a { color: #ddd; }
+  footer .mock { color: var(--alert); margin-left: auto; }
+
+  @media (prefers-reduced-motion: reduce) { .blink { animation: none; } }
+  /* ---- 案内（オンボーディング）と同じ絵: キーボードは明るい色のまま、ゲームの画面の中に置く ---- */
+  .split { margin-top: 28px; }
+  .points { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 1000px; }
+  .point { border-left: var(--pixel) solid var(--sea); padding: 4px 0 4px 16px; text-shadow: 2px 2px 0 #000; }
+  .point h3 { font-size: 20px; font-weight: 900; }
+  .point p { margin-top: 4px; font-size: 15px; font-weight: 600; color: #e6e6e6; }
+  .screen {
+    margin-top: 36px; background: #fff; max-width: 1000px;
+    border: var(--pixel) solid var(--hud);
+    box-shadow: 0 0 0 var(--pixel) #000, var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+  }
+  .screen .field {
+    margin: 18px 16px 10px; padding: 8px 12px; border: 1px solid #c6c6c8; border-radius: 8px;
+    color: #000; font-size: clamp(14px, 1.6vw, 20px);
+  }
+  .board {
+    position: relative; width: 100%; aspect-ratio: 801 / 232; background: #f2f2f7;
+    container-type: inline-size; overflow: hidden; color: #000;
+  }
+  .board .k {
+    position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: .75cqw; font-size: 2.5cqw; line-height: 1.1; white-space: nowrap; box-sizing: border-box;
+  }
+  .board .k.c { background: #fff; }
+  .board .k.f { background: #e3e3e8; font-size: 1.75cqw; }
+  .board .k.f.one { font-size: 2.5cqw; }
+  .board .k.p { background: rgba(10,132,255,.1); }
+  .board .k.p.empty { background: #dcdce1; }
+  .board .k.hl { background: rgba(10,132,255,.18); outline: 2px solid #0a84ff; outline-offset: -2px; color: #0a84ff; }
+  .board .k small { font-size: 1.25cqw; color: #8e8e93; }
+  .board .thumb { position: absolute; border-radius: 50%; background: rgba(26,143,216,.16); pointer-events: none; }
+  .goal { margin-top: 16px; }
+  .goal > span { display: block; font: 700 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: #34c759; margin-bottom: 6px; }
+  .goal .board, .goal .switch { outline: 2px solid #34c759; outline-offset: 0; }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f2f2f7; color: #000; padding: 12px 14px; font-size: 15px;
+  }
+  .switch i { width: 40px; height: 24px; border-radius: 12px; background: #34c759; position: relative; }
+  .switch i::after { content: ""; position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .note { margin-top: 26px; font-size: 15px; font-weight: 700; color: #fff; text-shadow: 2px 2px 0 #000; }
+  .practice { margin-top: 26px; display: flex; align-items: center; gap: 14px; font-size: clamp(32px, 5vw, 56px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
+  .practice .ok { color: #34c759; }
+  .practice b { color: #aaa; font-weight: 400; }
+  .practice em { font-style: normal; font-size: .4em; color: #34c759; }
+  .row.two { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
+  .face .no { font: 700 12px/1 ui-monospace, Menlo, monospace; letter-spacing: .15em; color: #fff; margin-bottom: 8px; text-shadow: 2px 2px 0 #000; }
+  .face .board { border: var(--pixel) solid var(--hud); box-shadow: var(--pixel) var(--pixel) 0 0 var(--sea); }
+  .legend { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; font-weight: 700; text-shadow: 2px 2px 0 #000; }
+  .legend kbd {
+    display: inline-block; min-width: 48px; text-align: center; margin-right: 12px;
+    background: #e3e3e8; color: #000; border-radius: 6px; padding: 4px 8px; font: 600 14px/1.2 -apple-system, sans-serif; text-shadow: none;
+  }
+  .stages { margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .stage {
+    background: #000d; border: 3px solid #666; padding: 12px 14px; font-size: 22px; font-weight: 900;
+  }
+  .stage small { display: block; font: 700 12px/1 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: #aaa; margin-bottom: 6px; }
+  .stage em { display: block; font-style: normal; font-size: 12px; font-weight: 600; color: #ccc; margin-top: 8px; }
+  .stage.on { border-color: var(--sea); }
+  .stage.on small { color: var(--sea); }
+  .stage.final { border-color: var(--alert); }
+  .stage.final small { color: var(--alert); }
+  .prompt { margin-top: 28px; font-size: clamp(28px, 4.4vw, 52px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
+  .prompt b { color: var(--sea); }
+</style>
+</head>
+<body>
+<canvas id="terrain"></canvas>
+<canvas id="sprites"></canvas>
+
+<header class="hud">
+  <a class="tag" href="#top">DUAL WIELD KEYBOARD</a>
+  <span id="hud-area">AREA 00</span>
+  <nav>
+    <a href="#feature">FEATURE</a>
+    <a href="#setup">READY</a>
+    <a href="#practice">PRACTICE</a>
+    <a href="#faces">FACES</a>
+    <a href="#game">BONUS</a>
+    <a href="#price">PRICE</a>
+    <a href="#">EN</a>
+    <a class="store" href="#">App Store</a>
+  </nav>
+</header>
+
+<main>
+  <section id="top" data-area="00">
+    <div class="title">
+      <canvas id="logo" role="img" aria-label="DUAL WIELD"></canvas>
+      <canvas id="logo2" role="img" aria-label="KEYBOARD"></canvas>
+    </div>
+    <h1>Dual Wield Keyboard</h1>
+    <p class="lead">握ったまま、両手の親指で打つ。<br>片手で字を打ち、もう片手で数字と漢字を選ぶ。iPhone Duo と iPad のためのキーボード。</p>
+    <div class="blink">SCROLL TO START</div>
+  </section>
+
+  <section id="feature" data-area="01">
+    <div class="area">AREA <b>01</b> · DUAL WIELD</div>
+    <h2>握ったまま、<br>両手の親指で打つ<span class="dot">。</span></h2>
+    <div class="split">
+      <div class="points">
+        <div class="point"><h3>握りを崩さない</h3><p>打つキーと候補は、両はしの親指の側に。</p></div>
+        <div class="point"><h3>左右が同時に働く</h3><p>片手が次の字を打つ間に、もう片手が選ぶ。</p></div>
+        <div class="point"><h3>右利きでも、左利きでも</h3><p>キー 1 つで、左右を入れ替えられる。</p></div>
+      </div>
+    </div>
+    <div class="screen big">
+      <div class="field"><u>きょうは</u></div>
+      <div class="board" data-face="ja-flick" data-cands="今日は,京は,きょうは" data-hl="今日は" data-thumbs="1"></div>
+    </div>
+  </section>
+
+  <section id="setup" data-area="02">
+    <div class="area">AREA <b>02</b> · READY</div>
+    <h2>準備は、3 つ<span class="dot">。</span></h2>
+    <div class="row three">
+      <div class="panel step"><div class="no">準備 1 / 3</div><h3>設定で、スイッチを入れる</h3>
+        <p>設定 → 一般 → キーボード → キーボード → 新しいキーボードを追加 から、Dual Wield Keyboard を選びます。</p>
+        <div class="goal"><span>できたら</span><div class="switch">Dual Wield Keyboard<i></i></div></div></div>
+      <div class="panel step"><div class="no">準備 2 / 3</div><h3>🌐 を長く押して、選ぶ</h3>
+        <p>文字を打つ欄で、キーボードの地球儀を長く押し、一覧から Dual Wield Keyboard を選びます。</p>
+        <div class="goal"><span>できたら</span><div class="board" data-face="ja-flick"></div></div></div>
+      <div class="panel step"><div class="no">準備 3 / 3</div><h3>左手で打つなら、⇄</h3>
+        <p>真ん中の ⇄ を押すたびに、左右が入れ替わります。キーボードが覚えます。</p>
+        <div class="goal"><span>左利き用</span><div class="board" data-face="ja-flick" data-mirror="1"></div></div></div>
+    </div>
+    <p class="note">通信しません。フルアクセスも求めません。かな漢字変換は端末の中だけで行い、打った言葉を覚えません。</p>
+  </section>
+
+  <section id="practice" data-area="03">
+    <div class="area">AREA <b>03</b> · PRACTICE</div>
+    <h2>「あき」と打って、<br>「秋」を押す<span class="dot">。</span></h2>
+    <p class="lead">「あ」は押すだけ。「き」は「か」を押したまま左へすべらせる。もう片方の手で、候補の「秋」を押す。</p>
+    <div class="practice"><span class="ok">あ</span><span class="ok">き</span><b>→</b><span class="ok">秋</span><em>✓ できました</em></div>
+    <div class="screen">
+      <div class="field"><u>あき</u></div>
+      <div class="board" data-face="ja-flick" data-cands="秋,空き,あき" data-hl="秋,か" data-thumbs="1"></div>
+    </div>
+  </section>
+
+  <section id="faces" data-area="04">
+    <div class="area">AREA <b>04</b> · FOUR FACES</div>
+    <h2>4 つの面を、<br>キーで切り替える<span class="dot">。</span></h2>
+    <div class="row two">
+      <div class="face"><div class="no">日本語・フリック</div><div class="board" data-face="ja-flick" data-cands="今日は,京は,きょうは" data-thumbs="1"></div></div>
+      <div class="face"><div class="no">日本語・ローマ字</div><div class="board" data-face="ja-qwerty" data-cands="今日は,京は,きょうは" data-thumbs="1"></div></div>
+      <div class="face"><div class="no">英語・フリック（押すと数字）</div><div class="board" data-face="en-flick" data-cands="hello,help,held" data-thumbs="1"></div></div>
+      <div class="face"><div class="no">英語・QWERTY</div><div class="board" data-face="en-qwerty" data-cands="hello,help,held" data-thumbs="1"></div></div>
+    </div>
+    <div class="legend">
+      <div><kbd>あ/A</kbd>日本語と英語</div>
+      <div><kbd>⌨︎</kbd>フリックと QWERTY</div>
+      <div><kbd>⇄</kbd>右利き用と左利き用</div>
+      <div><kbd>記</kbd>数字は選ぶ手の側。「記」で記号</div>
+    </div>
+  </section>
+
+  <section id="game" data-area="05">
+    <div class="area">AREA <b>05</b> · BONUS STAGE</div>
+    <h2>1 文を、5 面で組み立てる<span class="dot">。</span></h2>
+    <p class="lead">はじめての案内の最後は、小さなゲーム。1 手ずつ足して 1 文を打ち切り、本番は自分の記録と並んで打ちます。</p>
+    <div class="stages">
+      <div class="stage on"><small>1 面</small>今日は<em>打つ手で読み、反対の手で候補</em></div>
+      <div class="stage"><small>2 面</small>＋3<em>候補で確定してから、数字</em></div>
+      <div class="stage"><small>3 面</small>＋人で<em>濁点と小さい字は「小」で</em></div>
+      <div class="stage"><small>4 面</small>＋10<em>数字を続けて押す</em></div>
+      <div class="stage final"><small>本番</small>時間を測る<em>自分の記録と並ぶ</em></div>
+    </div>
+    <div class="prompt">今日は<b>3</b>人で<b>10</b>時に集まる</div>
+  </section>
+
+  <section id="price" class="coin" data-area="06">
+    <div class="area">AREA <b>06</b> · INSERT COIN</div>
+    <div class="credit">¥600<small> / $3.99</small></div>
+    <div class="sub">1 COIN · 買い切り · 月額なし<br>iPad・iPhone Duo（OS の版 27.2 以降）</div>
+    <div><span class="start">COMING SOON · App Store で近日公開</span></div>
+  </section>
+</main>
+
+<footer>
+  <span>DUAL WIELD KEYBOARD · © 2026 Tengaira (Hideto Minegishi)</span>
+  <a href="support-xevious.ja.html">サポート</a>
+  <a href="privacy-xevious.ja.html">プライバシーポリシー</a>
+  <a href="#">ライセンス</a>
+  <a href="sales-xevious.ja.html">販売について</a>
+  <a href="#">利用規約（Apple 標準 EULA）</a>
+  <span class="mock">MOCK · 公開しない</span>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- 5×7 のドットの字（ロゴだけに使う。自前で描いた形） ----------
+  const GLYPH = {
+    D:['11110','10001','10001','10001','10001','10001','11110'],
+    U:['10001','10001','10001','10001','10001','10001','01110'],
+    A:['01110','10001','10001','11111','10001','10001','10001'],
+    L:['10000','10000','10000','10000','10000','10000','11111'],
+    W:['10001','10001','10001','10101','10101','10101','01010'],
+    I:['11111','00100','00100','00100','00100','00100','11111'],
+    E:['11111','10000','10000','11110','10000','10000','11111'],
+    K:['10001','10010','10100','11000','10100','10010','10001'],
+    Y:['10001','10001','01010','00100','00100','00100','00100'],
+    B:['11110','10001','10001','11110','10001','10001','11110'],
+    O:['01110','10001','10001','10001','10001','10001','01110'],
+    R:['11110','10001','10001','11110','10100','10010','10001'],
+    ' ':['00000','00000','00000','00000','00000','00000','00000'],
+  };
+
+  // 銀の字: 上は白、真ん中で地平線のように暗く切れ、下でまた明るくなる。外側は海の青で縁取る
+  // 字と字の間は 2 ドット空ける（縁取りで字がくっつき、読めなくなるのを防ぐ）。
+  // 字の中の穴（D・O・A・B・R）は塗らない。影は右下へ 1 ドットずらした海の青だけにする
+  function drawLogo(canvas, text, cell) {
+    const adv = 7, w = text.length * adv - 2, h = 7, pad = 1;
+    canvas.width = (w + pad * 2 + 1) * cell; canvas.height = (h + pad * 2 + 1) * cell;
+    const g = canvas.getContext('2d');
+    const on = (x, y) => {
+      const i = Math.floor(x / adv), cx = x % adv;
+      if (x < 0 || i >= text.length || cx >= 5 || y < 0 || y >= h) return false;
+      return GLYPH[text[i]][y][cx] === '1';
+    };
+    // 上は白、下へ向かって銀から薄い青へ。途中で切れる暗い段は置かない
+    const chrome = ['#ffffff', '#ffffff', '#eef3f8', '#dbe4ee', '#c6d3e1', '#b3c4d6', '#a5b9cf'];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (on(x, y)) { const off = Math.max(2, Math.round(cell / 3)); g.fillStyle = '#1A8FD8'; g.fillRect((x + pad) * cell + off, (y + pad) * cell + off, cell, cell); }
+    }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (on(x, y)) { g.fillStyle = chrome[y]; g.fillRect((x + pad) * cell, (y + pad) * cell, cell, cell); }
+    }
+  }
+  drawLogo(document.getElementById('logo'), 'DUAL WIELD', 12);
+  drawLogo(document.getElementById('logo2'), 'KEYBOARD', 8);
+
+  // ---------- 4 つの面の小さな絵（区画の並びだけ。ドット 1 つ = 1px を拡大） ----------
+  document.querySelectorAll('canvas.face').forEach(c => {
+    const g = c.getContext('2d'), f = +c.dataset.face;
+    g.fillStyle = '#0b1a2a'; g.fillRect(0, 0, 96, 40);
+    const key = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+    const grid = (x0, cols, rows, col) => {
+      for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++) key(x0 + k * 6, 4 + r * 8, 5, 7, col);
+    };
+    const qwerty = (x0) => {
+      [10, 9, 7].forEach((n, r) => { for (let k = 0; k < n; k++) key(x0 + r * 2 + k * 4, 6 + r * 9, 3, 7, '#f4f4f4'); });
+    };
+    let x = 3;
+    if (f !== 2) { grid(x, 3, 4, '#9aa7b4'); x += 19; }       // 数字（面 2 にはない）
+    for (let r = 0; r < 3; r++) key(x, 4 + r * 8, 10, 7, '#1A8FD8'); // 候補
+    // 真ん中は空き（地形が透けて見える見立て）
+    if (f === 1 || f === 2) grid(96 - 20, 3, 4, f === 1 ? '#f4f4f4' : '#ffd166');
+    else qwerty(96 - 44);
+  });
+
+  // ---------- キーボードの絵（案内の BoardPicture と同じ並び。801×232 の座標で置き、絵の幅に合わせて縮める） ----------
+  (() => {
+    const R = [4, 62, 120, 178], H = 54;      // 4 段の上の位置と高さ
+    const key = (zone, x, row, w, label, cls, rows = 1, hint) => ({ zone, x, y: R[row], w, h: H * rows + 4 * (rows - 1), label, cls, hint });
+    // 左手の区画: 数字（3 列）＋候補（1 列）＋下の段の切り替え 3 つ
+    function numbersAndCands(cands) {
+      const k = [];
+      [['1','2','3'],['4','5','6'],['7','8','9']].forEach((r, i) => r.forEach((d, j) => k.push(key('N', 4 + j * 48, i, 44, d, 'c'))));
+      k.push(key('N', 4, 3, 44, '記', 'f one'), key('N', 52, 3, 44, '0', 'c'), key('N', 100, 3, 44, '.', 'c'));
+      for (let i = 0; i < 3; i++) k.push(key('P', 148, i, 150, cands[i] || '', cands[i] ? 'p' : 'p empty'));
+      k.push(key('P', 148, 3, 48, '🌐', 'f one'), key('P', 200, 3, 46, 'あ/A', 'f'), key('P', 250, 3, 48, '⌨︎', 'f'));
+      return k;
+    }
+    function kana() {
+      const k = [];
+      [['あ','か','さ'],['た','な','は'],['ま','や','ら'],['小','わ','、']].forEach((r, i) => r.forEach((c, j) =>
+        k.push(key('R', 566 + j * 58, i, 54, c, (i === 3 && j === 0) ? 'f one' : 'c'))));
+      k.push(key('R', 740, 0, 57, '削除', 'f'), key('R', 740, 1, 57, '空白', 'f'), key('R', 740, 2, 57, '改行', 'f', 2));
+      return k;
+    }
+    function digits() {
+      const hints = { '1':'@#/&','2':'abc','3':'def','4':'ghi','5':'jkl','6':'mno','7':'pqrs','8':'tuv','9':'wxyz','0':'\'"()','.':',?!' };
+      const k = [];
+      [['1','2','3'],['4','5','6'],['7','8','9'],['a/A','0','.']].forEach((r, i) => r.forEach((c, j) =>
+        k.push(key('R', 566 + j * 58, i, 54, c, c === 'a/A' ? 'f' : 'c', 1, hints[c]))));
+      k.push(key('R', 740, 0, 57, '削除', 'f'), key('R', 740, 1, 57, 'space', 'f'), key('R', 740, 2, 57, 'return', 'f', 2));
+      return k;
+    }
+    function qwerty(japanese) {
+      const k = [], x0 = 350, step = 44.7, w = 41;
+      'qwertyuiop'.split('').forEach((c, i) => k.push(key('R', x0 + i * step, 0, w, c, 'c')));
+      (japanese ? 'asdfghjklー' : "asdfghjkl'").split('').forEach((c, i) => k.push(key('R', x0 + i * step, 1, w, c, 'c')));
+      k.push(key('R', x0, 2, w + 18, '⇧', 'f one'));
+      'zxcvbnm'.split('').forEach((c, i) => k.push(key('R', x0 + 62 + i * step * 0.98, 2, w, c, 'c')));
+      k.push(key('R', x0 + 62 + 7 * step * 0.98, 2, 797 - (x0 + 62 + 7 * step * 0.98), '削除', 'f'));
+      k.push(key('R', x0, 3, 270, japanese ? '空白' : 'space', 'f'), key('R', x0 + 274, 3, 797 - x0 - 274, japanese ? '改行' : 'return', 'f'));
+      return k;
+    }
+    function build(face, cands) {
+      if (face === 'ja-flick') return [...numbersAndCands(cands), key('C', 424, 3, 52, '⇄', 'f one'), ...kana()];
+      if (face === 'ja-qwerty') return [...numbersAndCands(cands), key('C', 302, 3, 44, '⇄', 'f one'), ...qwerty(true)];
+      if (face === 'en-qwerty') return [...numbersAndCands(cands), key('C', 302, 3, 44, '⇄', 'f one'), ...qwerty(false)];
+      // 英語のフリック: 数字の区画は無く、候補が左はし
+      const k = [];
+      for (let i = 0; i < 3; i++) k.push(key('L', 4, i, 150, cands[i] || '', cands[i] ? 'p' : 'p empty'));
+      k.push(key('L', 4, 3, 46, '🌐', 'f one'), key('L', 54, 3, 48, 'あ/A', 'f'), key('L', 106, 3, 48, '⌨︎', 'f'));
+      return [...k, key('C', 374, 3, 52, '⇄', 'f one'), ...digits()];
+    }
+    // 左利き用: 区画（数字・候補・入力キー）の並びを左右で逆にする。区画の中の並びは変えない（案内の準備 3 と同じ）
+    function mirror(keys) {
+      const span = z => { const ks = keys.filter(k => k.zone === z); return ks.length ? [Math.min(...ks.map(k => k.x)), Math.max(...ks.map(k => k.x + k.w))] : null; };
+      const n = span('N'), p = span('P'), r = span('R');
+      return keys.map(k => {
+        if (k.zone === 'R') return { ...k, x: 4 + (k.x - r[0]) };
+        if (k.zone === 'N') return { ...k, x: 801 - 4 - (n[1] - n[0]) + (k.x - n[0]) };
+        if (k.zone === 'P') {
+          const right = n ? 801 - 4 - (n[1] - n[0]) - (n[0] > p[1] ? n[0] - p[1] : p[0] - n[1]) : 801 - 4;
+          return { ...k, x: right - (p[1] - p[0]) + (k.x - p[0]) };
+        }
+        return { ...k, x: 801 - k.x - k.w };
+      });
+    }
+    document.querySelectorAll('.board').forEach(b => {
+      const cands = (b.dataset.cands || '').split(',').filter(Boolean);
+      const hl = new Set((b.dataset.hl || '').split(',').filter(Boolean));
+      let keys = build(b.dataset.face, cands);
+      if (b.dataset.mirror) keys = mirror(keys);
+      const pct = (v, of) => (v / of * 100) + '%';
+      keys.forEach(k => {
+        const d = document.createElement('div');
+        d.className = 'k ' + k.cls + (hl.has(k.label) ? ' hl' : '');
+        d.style.left = pct(k.x + 2, 801); d.style.top = pct(k.y + 2, 232);
+        d.style.width = pct(k.w - 4, 801); d.style.height = pct(k.h - 4, 232);
+        d.textContent = k.label;
+        if (k.hint) { const s = document.createElement('small'); s.textContent = k.hint; d.appendChild(s); }
+        b.appendChild(d);
+      });
+      if (b.dataset.thumbs) {
+        // アイコンと同じ比（幅 180 に半径 102）の円を下の両はしの角に（大きさは測った値ではない）
+        const r = 102 / 180 * 0.42 * 100;   // 幅に対する %
+        [0, 100].forEach(x => {
+          const t = document.createElement('div'); t.className = 'thumb';
+          t.style.width = t.style.height = (r * 2) + 'cqw';
+          t.style.left = `calc(${x}% - ${r}cqw)`; t.style.top = `calc(100% - ${r}cqw)`;
+          b.appendChild(t);
+        });
+      }
+      b.setAttribute('aria-hidden', 'true');
+    });
+  })();
+
+  // ---------- 地形（上から見た森・川・道・地上絵。縦に長い 1 枚を作って流す） ----------
+  const T = document.getElementById('terrain'), tg = T.getContext('2d');
+  const S = document.getElementById('sprites'), sg = S.getContext('2d');
+  const PX = 4;                      // ドット 1 つの大きさ（画面の px）
+  let W, H, map, mapH;
+
+  function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+  function buildMap() {
+    W = Math.ceil(innerWidth / PX); H = Math.ceil(innerHeight / PX);
+    mapH = H * 6;
+    map = document.createElement('canvas'); map.width = W; map.height = mapH;
+    const g = map.getContext('2d'), r = rng(7);
+    g.fillStyle = '#1d3f1c'; g.fillRect(0, 0, W, mapH);
+    // 森のまだら
+    const greens = ['#16351a', '#24502a', '#2d5f2c', '#1a4220'];
+    for (let i = 0; i < W * mapH / 6; i++) {
+      g.fillStyle = greens[(r() * 4) | 0];
+      g.fillRect((r() * W) | 0, (r() * mapH) | 0, 1 + ((r() * 2) | 0), 1);
+    }
+    // 開けた土地
+    for (let i = 0; i < 26; i++) {
+      const cx = r() * W, cy = r() * mapH, rad = 8 + r() * 22;
+      g.fillStyle = '#6f7a3c';
+      for (let y = -rad; y < rad; y++) for (let x = -rad; x < rad; x++)
+        if (x * x + y * y < rad * rad * (0.7 + r() * 0.3)) g.fillRect((cx + x) | 0, (cy + y) | 0, 1, 1);
+    }
+    // 川（海の青）
+    for (let y = 0; y < mapH; y++) {
+      const cx = W * 0.5 + Math.sin(y / 60) * W * 0.28 + Math.sin(y / 17) * 3;
+      g.fillStyle = '#145f94'; g.fillRect((cx - 7) | 0, y, 14, 1);
+      g.fillStyle = '#1A8FD8'; g.fillRect((cx - 4) | 0, y, 8, 1);
+      if (y % 9 === 0) { g.fillStyle = '#8fd0ff'; g.fillRect((cx - 2 + (y % 5)) | 0, y, 2, 1); }
+    }
+    // 道
+    g.fillStyle = '#b9b3a2';
+    for (let k = 0; k < 4; k++) { const y = ((k + 0.5) * mapH / 4) | 0; g.fillRect(0, y, W, 2); }
+    g.fillRect((W * 0.18) | 0, 0, 2, mapH);
+    // 地上絵: 両はしの角から広がる親指の弧と、キーの列（アイコンの形を地面に描いた見立て）
+    g.fillStyle = '#EDE8DC';
+    for (let k = 0; k < 3; k++) {
+      const oy = ((k + 0.3) * mapH / 3) | 0, R = Math.min(W * 0.3, 70);
+      for (let a = 0; a <= Math.PI / 2; a += 0.004) {
+        g.fillRect((W * 0.08 + Math.cos(a) * R) | 0, (oy + R - Math.sin(a) * R) | 0, 1, 1);
+        g.fillRect((W * 0.92 - Math.cos(a) * R) | 0, (oy + R - Math.sin(a) * R) | 0, 1, 1);
+      }
+      for (let i = 0; i < 3; i++) g.fillRect((W * 0.08 + 6) | 0, oy + R - 34 + i * 8, 14, 1);
+      for (let i = 0; i < 9; i++) {
+        const kx = (W * 0.92 - 26 + (i % 3) * 8) | 0, ky = oy + R - 34 + ((i / 3) | 0) * 8;
+        g.strokeStyle = '#EDE8DC'; g.lineWidth = 1; g.strokeRect(kx + .5, ky + .5, 5, 5);
+      }
+    }
+  }
+
+  function resize() {
+    buildMap();
+    T.width = W; T.height = H; S.width = W; S.height = H;
+    T.style.width = S.style.width = W * PX + 'px';
+    T.style.height = S.style.height = H * PX + 'px';
+    tg.imageSmoothingEnabled = false;
+  }
+  addEventListener('resize', resize); resize();
+
+  // ---------- 自機・弾・照準・落ちてくるキー ----------
+  let shipX = 0.5, targetX = 0.5, t = 0, travel = 0;
+  const shots = [], keys = [], sparks = [];
+  const KANA = 'あかさたなはまやらわ';
+  addEventListener('pointermove', e => { targetX = e.clientX / innerWidth; });
+
+  // 自前のドット絵の自機（両翼に 1 門ずつ。左が青＝選ぶ、右が赤＝打つ）
+  const SHIP = [
+    '....0110....',
+    '....0110....',
+    '...011110...',
+    '...0WWWW0...',
+    '..0WSSSSW0..',
+    '.B0WSKKSW0R.',
+    'BB0WSSSSW0RR',
+    'B00WWWWWW00R',
+    '0...0000...0',
+  ];
+  const SHIPCOL = { '0': '#2a2f38', W: '#dfe6ee', S: '#8ea2b8', K: '#1A8FD8', B: '#1A8FD8', R: '#ff3b30' };
+
+  function frame() {
+    t++;
+    // 文を下へ送ると、地面が手前へ流れる（前へ進む見立て）
+    const scrollMax = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+    const prog = scrollY / scrollMax;
+    if (!reduce) travel += 0.15;
+    const oy = Math.max(0, mapH - H - prog * (mapH - H) * 0.9 - (travel % 40));
+    tg.drawImage(map, 0, oy, W, H, 0, 0, W, H);
+
+    sg.clearRect(0, 0, W, H);
+    shipX += (targetX - shipX) * 0.08;
+    const sx = (shipX * W) | 0, sy = H - 24;
+
+    if (!reduce) {
+      // 右の砲: 弾を撃ち続ける
+      if (t % 7 === 0) shots.push({ x: sx + 5, y: sy });
+      // 上からキーが落ちてくる
+      if (t % 40 === 0) keys.push({ x: 8 + Math.random() * (W - 16), y: -10, ch: KANA[(Math.random() * KANA.length) | 0], hp: 3 });
+    }
+    sg.fillStyle = '#fff7c2';
+    for (let i = shots.length - 1; i >= 0; i--) {
+      const s = shots[i]; s.y -= 4; sg.fillRect(s.x, s.y, 1, 3);
+      if (s.y < -4) shots.splice(i, 1);
+    }
+    sg.font = 'bold 9px "Hiragino Sans", sans-serif'; sg.textAlign = 'center'; sg.textBaseline = 'middle';
+    for (let i = keys.length - 1; i >= 0; i--) {
+      const k = keys[i]; k.y += 0.6;
+      // キーの形（銀の枠に字）
+      sg.fillStyle = '#000'; sg.fillRect(k.x - 6, k.y - 5, 13, 12);
+      sg.fillStyle = '#c9d4e0'; sg.fillRect(k.x - 7, k.y - 6, 13, 12);
+      sg.fillStyle = '#f7fafc'; sg.fillRect(k.x - 7, k.y - 6, 13, 2);
+      sg.fillStyle = '#1b2533'; sg.fillText(k.ch, k.x - 0.5, k.y + 0.5);
+      for (let j = shots.length - 1; j >= 0; j--) {
+        const s = shots[j];
+        if (Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
+      }
+      if (k.hp <= 0) {
+        for (let n = 0; n < 12; n++) sparks.push({ x: k.x, y: k.y, vx: (Math.random() - .5) * 3, vy: (Math.random() - .5) * 3, life: 18 });
+        keys.splice(i, 1);
+      } else if (k.y > H + 10) keys.splice(i, 1);
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const p = sparks[i]; p.x += p.vx; p.y += p.vy; p.life--;
+      sg.fillStyle = p.life > 10 ? '#fff' : (p.life > 5 ? '#ffd166' : '#ff3b30');
+      sg.fillRect(p.x | 0, p.y | 0, 1, 1);
+      if (p.life <= 0) sparks.splice(i, 1);
+    }
+    // 左の砲: 前方の地面を狙う照準（点滅）
+    if (reduce || (t >> 4) % 2 === 0) {
+      const cx = sx - 1, cy = sy - 46;
+      sg.fillStyle = '#1A8FD8';
+      sg.fillRect(cx - 5, cy, 3, 1); sg.fillRect(cx + 3, cy, 3, 1);
+      sg.fillRect(cx, cy - 5, 1, 3); sg.fillRect(cx, cy + 3, 1, 3);
+      sg.fillRect(cx - 5, cy - 5, 2, 1); sg.fillRect(cx + 4, cy - 5, 2, 1);
+      sg.fillRect(cx - 5, cy + 5, 2, 1); sg.fillRect(cx + 4, cy + 5, 2, 1);
+    }
+    // 自機と影
+    SHIP.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch === '.') return;
+      sg.fillStyle = '#0006'; sg.fillRect(sx - 6 + x + 6, sy + y + 8, 1, 1);
+    }));
+    SHIP.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch === '.') return;
+      sg.fillStyle = SHIPCOL[ch]; sg.fillRect(sx - 6 + x, sy + y, 1, 1);
+    }));
+
+    if (!reduce || t < 2) requestAnimationFrame(frame);
+  }
+  frame(); // 1 枚目はすぐ描く（描画の合図を待たない）
+  if (reduce) addEventListener('scroll', () => requestAnimationFrame(frame), { passive: true });
+
+  // ---------- 上の帯の AREA を、見えている区切りに合わせる ----------
+  const hud = document.getElementById('hud-area');
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) hud.textContent = 'AREA ' + e.target.dataset.area;
+  }), { threshold: 0.5 });
+  document.querySelectorAll('section[data-area]').forEach(s => io.observe(s));
+})();
+</script>
+</body>
+</html>

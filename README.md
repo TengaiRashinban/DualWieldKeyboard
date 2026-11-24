@@ -16,3 +16,16 @@ The privacy and support URLs are the ones to register in App Store Connect — d
 move or rename these files.
 
 Contact: contact@tengaira.com
+
+## How the pages are made
+
+The six pages are generated — don't edit them by hand. Edit `tools/shell.ja.html`
+(the shared look and the Japanese top page) or `tools/build.py` (the English top page and the
+support / privacy text in both languages), then rebuild from the repository root and commit:
+
+```bash
+/Applications/Xcode.app/Contents/Developer/usr/bin/python3 -I tools/build.py
+```
+
+The mock-ups that led to this design are kept in the app repository
+(`DuoKeyboard/docs/mock/`, with a README describing the order).
