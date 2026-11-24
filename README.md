@@ -5,13 +5,14 @@ Tengaira. Served via GitHub Pages.
 
 | Page | URL |
 |---|---|
+| Top (EN) | https://TengaiRashinban.github.io/DualWieldKeyboard/ |
 | トップ (JA) | https://TengaiRashinban.github.io/DualWieldKeyboard/index.ja.html |
+| Support (EN) | https://TengaiRashinban.github.io/DualWieldKeyboard/support.html |
 | サポート (JA) | https://TengaiRashinban.github.io/DualWieldKeyboard/support.ja.html |
+| Privacy Policy (EN) | https://TengaiRashinban.github.io/DualWieldKeyboard/privacy.html |
 | プライバシーポリシー (JA) | https://TengaiRashinban.github.io/DualWieldKeyboard/privacy.ja.html |
-| 販売について (JA) | https://TengaiRashinban.github.io/DualWieldKeyboard/sales.ja.html |
 
-The privacy and support URLs will be registered in App Store Connect — do not
-move or rename these files. English pages (`index.html`, `privacy.html`, …) are not written yet;
-`index.html` forwards to the Japanese top page until then.
+The privacy and support URLs are the ones to register in App Store Connect — do not
+move or rename these files.
 
 Contact: contact@tengaira.com

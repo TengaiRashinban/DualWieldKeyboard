@@ -148,6 +148,71 @@
   footer .mock { color: var(--alert); margin-left: auto; }
 
   @media (prefers-reduced-motion: reduce) { .blink { animation: none; } }
+  /* ---- 案内（オンボーディング）と同じ絵: キーボードは明るい色のまま、ゲームの画面の中に置く ---- */
+  .split { margin-top: 28px; }
+  .points { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; max-width: 1000px; }
+  .point { border-left: var(--pixel) solid var(--sea); padding: 4px 0 4px 16px; text-shadow: 2px 2px 0 #000; }
+  .point h3 { font-size: 20px; font-weight: 900; }
+  .point p { margin-top: 4px; font-size: 15px; font-weight: 600; color: #e6e6e6; }
+  .screen {
+    margin-top: 36px; background: #fff; max-width: 1000px;
+    border: var(--pixel) solid var(--hud);
+    box-shadow: 0 0 0 var(--pixel) #000, var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+  }
+  .screen .field {
+    margin: 18px 16px 10px; padding: 8px 12px; border: 1px solid #c6c6c8; border-radius: 8px;
+    color: #000; font-size: clamp(14px, 1.6vw, 20px);
+  }
+  .board {
+    position: relative; width: 100%; aspect-ratio: 801 / 232; background: #f2f2f7;
+    container-type: inline-size; overflow: hidden; color: #000;
+  }
+  .board .k {
+    position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border-radius: .75cqw; font-size: 2.5cqw; line-height: 1.1; white-space: nowrap; box-sizing: border-box;
+  }
+  .board .k.c { background: #fff; }
+  .board .k.f { background: #e3e3e8; font-size: 1.75cqw; }
+  .board .k.f.one { font-size: 2.5cqw; }
+  .board .k.p { background: rgba(10,132,255,.1); }
+  .board .k.p.empty { background: #dcdce1; }
+  .board .k.hl { background: rgba(10,132,255,.18); outline: 2px solid #0a84ff; outline-offset: -2px; color: #0a84ff; }
+  .board .k small { font-size: 1.25cqw; color: #8e8e93; }
+  .board .thumb { position: absolute; border-radius: 50%; background: rgba(26,143,216,.16); pointer-events: none; }
+  .goal { margin-top: 16px; }
+  .goal > span { display: block; font: 700 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: #34c759; margin-bottom: 6px; }
+  .goal .board, .goal .switch { outline: 2px solid #34c759; outline-offset: 0; }
+  .switch {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f2f2f7; color: #000; padding: 12px 14px; font-size: 15px;
+  }
+  .switch i { width: 40px; height: 24px; border-radius: 12px; background: #34c759; position: relative; }
+  .switch i::after { content: ""; position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .note { margin-top: 26px; font-size: 15px; font-weight: 700; color: #fff; text-shadow: 2px 2px 0 #000; }
+  .practice { margin-top: 26px; display: flex; align-items: center; gap: 14px; font-size: clamp(32px, 5vw, 56px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
+  .practice .ok { color: #34c759; }
+  .practice b { color: #aaa; font-weight: 400; }
+  .practice em { font-style: normal; font-size: .4em; color: #34c759; }
+  .row.two { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
+  .face .no { font: 700 12px/1 ui-monospace, Menlo, monospace; letter-spacing: .15em; color: #fff; margin-bottom: 8px; text-shadow: 2px 2px 0 #000; }
+  .face .board { border: var(--pixel) solid var(--hud); box-shadow: var(--pixel) var(--pixel) 0 0 var(--sea); }
+  .legend { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; font-weight: 700; text-shadow: 2px 2px 0 #000; }
+  .legend kbd {
+    display: inline-block; min-width: 48px; text-align: center; margin-right: 12px;
+    background: #e3e3e8; color: #000; border-radius: 6px; padding: 4px 8px; font: 600 14px/1.2 -apple-system, sans-serif; text-shadow: none;
+  }
+  .stages { margin-top: 34px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .stage {
+    background: #000d; border: 3px solid #666; padding: 12px 14px; font-size: 22px; font-weight: 900;
+  }
+  .stage small { display: block; font: 700 12px/1 ui-monospace, Menlo, monospace; letter-spacing: .2em; color: #aaa; margin-bottom: 6px; }
+  .stage em { display: block; font-style: normal; font-size: 12px; font-weight: 600; color: #ccc; margin-top: 8px; }
+  .stage.on { border-color: var(--sea); }
+  .stage.on small { color: var(--sea); }
+  .stage.final { border-color: var(--alert); }
+  .stage.final small { color: var(--alert); }
+  .prompt { margin-top: 28px; font-size: clamp(28px, 4.4vw, 52px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
+  .prompt b { color: var(--sea); }
 </style>
 </head>
 <body>
@@ -155,51 +220,44 @@
 <canvas id="sprites"></canvas>
 
 <header class="hud">
-  <a class="tag" href="#top">DUAL WIELD KEYBOARD</a>
+  <a class="tag" href="index.ja.html#top">DUAL WIELD KEYBOARD</a>
   <span id="hud-area">SUPPORT</span>
   <nav>
-    <a href="index.ja.html#grip">GRIP</a>
-    <a href="index.ja.html#promise">PROMISE</a>
+    <a href="index.ja.html#feature">FEATURE</a>
+    <a href="index.ja.html#setup">READY</a>
+    <a href="index.ja.html#practice">PRACTICE</a>
     <a href="index.ja.html#faces">FACES</a>
-    <a href="index.ja.html#privacy">PRIVACY</a>
+    <a href="index.ja.html#game">BONUS</a>
     <a href="index.ja.html#price">PRICE</a>
+    <a href="support.html" lang="en">EN</a>
     <span class="store">App Store で近日公開</span>
   </nav>
 </header>
 
 <main>
-  <section id="support" data-area="S1" style="min-height:auto;padding-top:140px">
+  <section data-area="S1" data-hud="SUPPORT" style="min-height:auto;padding-top:140px;">
     <div class="area">SUPPORT · <b>CONTINUE?</b></div>
     <h2>お気軽に、<br>ご連絡ください<span class="dot">。</span></h2>
     <p class="lead">ご質問、不具合のご報告、ご意見をお待ちしています。日本語でも英語でもかまいません。</p>
     <div class="row" style="max-width:900px">
-      <div class="panel"><div class="no">CONTACT</div><h3><a href="mailto:contact@tengaira.com" style="color:inherit">contact@tengaira.com</a></h3>
-        <p>不具合のときは、お使いの機種（iPad の型・iPhone Duo）、OS の版、縦か横か、どの面で起きたかを添えてください。</p></div>
+      <div class="panel"><div class="no">CONTACT</div><h3><a href="mailto:contact@tengaira.com" style="color:inherit">contact@tengaira.com</a></h3><p>不具合のときは、お使いの機種（iPad の型・iPhone Duo）、OS の版、縦か横か、どの面で起きたかを添えてください。</p></div>
+      <div class="panel"><div class="no">提供者</div><h3>Tengaira（Hideto Minegishi）</h3><p>Dual Wield Keyboard は App Store で、日本では 600 円、米国では $3.99 の買い切りで提供します。</p></div>
     </div>
   </section>
-
-  <section id="faq" data-area="S2" style="min-height:auto">
+  <section data-area="S2" data-hud="SUPPORT" style="min-height:auto;">
     <div class="area">HOW TO PLAY</div>
     <h2>よくある質問<span class="dot">。</span></h2>
     <div class="row" style="max-width:900px">
-      <div class="panel"><div class="no">Q1 · 入れ方</div><h3>キーボードが出てきません。</h3>
-        <p>設定 → 一般 → キーボード → キーボード → 新しいキーボードを追加 から、Dual Wield Keyboard を選んでください。そのあと、文字を打つ欄でキーボードの地球儀を長押しし、一覧から Dual Wield Keyboard を選びます。アプリの「使い方と設定の手順を見る」でも同じ手順を見られます。</p></div>
-      <div class="panel"><div class="no">Q2 · フルアクセス</div><h3>「フルアクセスを許可」は入れるべきですか？</h3>
-        <p>入れなくてかまいません。このキーボードはフルアクセスを求めず、なしですべての働きが使えます。</p></div>
-      <div class="panel"><div class="no">Q3 · 左利き</div><h3>左手で打ちたい。</h3>
-        <p>キーボードの真ん中の ⇄ を押すと、左右が入れ替わります。キーボードが覚えているので、次からもそのままです。</p></div>
-      <div class="panel"><div class="no">Q4 · 変換</div><h3>よく使う言葉を覚えてくれません。</h3>
-        <p>そういう作りです。打った読みと確定した言葉を書き残さないため、変換の学習をしません。</p></div>
-      <div class="panel"><div class="no">Q5 · 打った字</div><h3>打った字は、どこかへ送られますか？</h3>
-        <p>送られません。キーボードは通信をせず、かな漢字変換も端末の中で行います。くわしくはプライバシーポリシーをご覧ください。</p></div>
-      <div class="panel"><div class="no">Q6 · 地球儀</div><h3>キーボードの中に地球儀がありません。</h3>
-        <p>地球儀をキーボードの下に出す機種では、そちらの地球儀を使ってください。その機種では、キーボードの中には出しません。</p></div>
-      <div class="panel"><div class="no">Q7 · 返金</div><h3>返金をしたい。</h3>
-        <p>App Store での購入は Apple が扱います。reportaproblem.apple.com からお申し込みください。</p></div>
+      <div class="panel"><div class="no">Q1 · 入れ方</div><h3>キーボードが出てきません。</h3><p>設定 → 一般 → キーボード → キーボード → 新しいキーボードを追加 から、Dual Wield Keyboard を選んでください。そのあと、文字を打つ欄でキーボードの地球儀を長押しし、一覧から Dual Wield Keyboard を選びます。アプリの「使い方と設定の手順を見る」でも同じ手順を見られます。</p></div>
+      <div class="panel"><div class="no">Q2 · フルアクセス</div><h3>「フルアクセスを許可」は入れるべきですか？</h3><p>入れなくてかまいません。このキーボードはフルアクセスを求めず、なしですべての働きが使えます。</p></div>
+      <div class="panel"><div class="no">Q3 · 左利き</div><h3>左手で打ちたい。</h3><p>キーボードの真ん中の ⇄ を押すと、左右が入れ替わります。キーボードが覚えているので、次からもそのままです。</p></div>
+      <div class="panel"><div class="no">Q4 · 変換</div><h3>よく使う言葉を覚えてくれません。</h3><p>そういう作りです。打った読みと確定した言葉を書き残さないため、変換の学習をしません。</p></div>
+      <div class="panel"><div class="no">Q5 · 打った字</div><h3>打った字は、どこかへ送られますか？</h3><p>送られません。キーボードは通信をせず、かな漢字変換も端末の中で行います。くわしくはプライバシーポリシーをご覧ください。</p></div>
+      <div class="panel"><div class="no">Q6 · 地球儀</div><h3>キーボードの中に地球儀がありません。</h3><p>地球儀をキーボードの下に出す機種では、そちらの地球儀を使ってください。その機種では、キーボードの中には出しません。</p></div>
+      <div class="panel"><div class="no">Q7 · 支払いと返金</div><h3>支払いと返金は？</h3><p>代金は App Store で払います。月額や追加の購入はありません。返金は Apple が扱うので、reportaproblem.apple.com からお申し込みください。</p></div>
     </div>
   </section>
-
-  <section id="privacy" data-area="S3" style="min-height:auto">
+  <section data-area="S3" data-hud="PRIVACY" style="min-height:auto;">
     <div class="area">PRIVACY</div>
     <h2>データの扱い<span class="dot">。</span></h2>
     <div style="margin-top:32px"><a class="start" href="privacy.ja.html">プライバシーポリシーを読む →</a></div>
@@ -210,9 +268,8 @@
   <span>DUAL WIELD KEYBOARD · © 2026 Tengaira (Hideto Minegishi)</span>
   <a href="support.ja.html">サポート</a>
   <a href="privacy.ja.html">プライバシーポリシー</a>
-  <a href="sales.ja.html">販売について</a>
   <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/">利用規約（Apple 標準 EULA）</a>
-  <span class="legal">iPad、iPhone は、米国およびその他の国で登録された Apple Inc. の商標です。App Store は、米国およびその他の国で登録された Apple Inc. のサービスマークです。<br>iPad and iPhone are trademarks of Apple Inc., registered in the U.S. and other countries. App Store is a service mark of Apple Inc., registered in the U.S. and other countries.</span>
+  <span class="legal">iPad、iPhone は、米国およびその他の国で登録された Apple Inc. の商標です。App Store は、米国およびその他の国で登録された Apple Inc. のサービスマークです。</span>
 </footer>
 
 <script>
@@ -280,6 +337,97 @@
     if (f === 1 || f === 2) grid(96 - 20, 3, 4, f === 1 ? '#f4f4f4' : '#ffd166');
     else qwerty(96 - 44);
   });
+
+  // ---------- キーボードの絵（案内の BoardPicture と同じ並び。801×232 の座標で置き、絵の幅に合わせて縮める） ----------
+  (() => {
+    const R = [4, 62, 120, 178], H = 54;      // 4 段の上の位置と高さ
+    const key = (zone, x, row, w, label, cls, rows = 1, hint) => ({ zone, x, y: R[row], w, h: H * rows + 4 * (rows - 1), label, cls, hint });
+    // 左手の区画: 数字（3 列）＋候補（1 列）＋下の段の切り替え 3 つ
+    function numbersAndCands(cands) {
+      const k = [];
+      [['1','2','3'],['4','5','6'],['7','8','9']].forEach((r, i) => r.forEach((d, j) => k.push(key('N', 4 + j * 48, i, 44, d, 'c'))));
+      k.push(key('N', 4, 3, 44, '記', 'f one'), key('N', 52, 3, 44, '0', 'c'), key('N', 100, 3, 44, '.', 'c'));
+      for (let i = 0; i < 3; i++) k.push(key('P', 148, i, 150, cands[i] || '', cands[i] ? 'p' : 'p empty'));
+      k.push(key('P', 148, 3, 48, '🌐', 'f one'), key('P', 200, 3, 46, 'あ/A', 'f'), key('P', 250, 3, 48, '⌨︎', 'f'));
+      return k;
+    }
+    function kana() {
+      const k = [];
+      [['あ','か','さ'],['た','な','は'],['ま','や','ら'],['小','わ','、']].forEach((r, i) => r.forEach((c, j) =>
+        k.push(key('R', 566 + j * 58, i, 54, c, (i === 3 && j === 0) ? 'f one' : 'c'))));
+      k.push(key('R', 740, 0, 57, '削除', 'f'), key('R', 740, 1, 57, '空白', 'f'), key('R', 740, 2, 57, '改行', 'f', 2));
+      return k;
+    }
+    function digits() {
+      const hints = { '1':'@#/&','2':'abc','3':'def','4':'ghi','5':'jkl','6':'mno','7':'pqrs','8':'tuv','9':'wxyz','0':'\'"()','.':',?!' };
+      const k = [];
+      [['1','2','3'],['4','5','6'],['7','8','9'],['a/A','0','.']].forEach((r, i) => r.forEach((c, j) =>
+        k.push(key('R', 566 + j * 58, i, 54, c, c === 'a/A' ? 'f' : 'c', 1, hints[c]))));
+      k.push(key('R', 740, 0, 57, '削除', 'f'), key('R', 740, 1, 57, 'space', 'f'), key('R', 740, 2, 57, 'return', 'f', 2));
+      return k;
+    }
+    function qwerty(japanese) {
+      const k = [], x0 = 350, step = 44.7, w = 41;
+      'qwertyuiop'.split('').forEach((c, i) => k.push(key('R', x0 + i * step, 0, w, c, 'c')));
+      (japanese ? 'asdfghjklー' : "asdfghjkl'").split('').forEach((c, i) => k.push(key('R', x0 + i * step, 1, w, c, 'c')));
+      k.push(key('R', x0, 2, w + 18, '⇧', 'f one'));
+      'zxcvbnm'.split('').forEach((c, i) => k.push(key('R', x0 + 62 + i * step * 0.98, 2, w, c, 'c')));
+      k.push(key('R', x0 + 62 + 7 * step * 0.98, 2, 797 - (x0 + 62 + 7 * step * 0.98), '削除', 'f'));
+      k.push(key('R', x0, 3, 270, japanese ? '空白' : 'space', 'f'), key('R', x0 + 274, 3, 797 - x0 - 274, japanese ? '改行' : 'return', 'f'));
+      return k;
+    }
+    function build(face, cands) {
+      if (face === 'ja-flick') return [...numbersAndCands(cands), key('C', 424, 3, 52, '⇄', 'f one'), ...kana()];
+      if (face === 'ja-qwerty') return [...numbersAndCands(cands), key('C', 302, 3, 44, '⇄', 'f one'), ...qwerty(true)];
+      if (face === 'en-qwerty') return [...numbersAndCands(cands), key('C', 302, 3, 44, '⇄', 'f one'), ...qwerty(false)];
+      // 英語のフリック: 数字の区画は無く、候補が左はし
+      const k = [];
+      for (let i = 0; i < 3; i++) k.push(key('L', 4, i, 150, cands[i] || '', cands[i] ? 'p' : 'p empty'));
+      k.push(key('L', 4, 3, 46, '🌐', 'f one'), key('L', 54, 3, 48, 'あ/A', 'f'), key('L', 106, 3, 48, '⌨︎', 'f'));
+      return [...k, key('C', 374, 3, 52, '⇄', 'f one'), ...digits()];
+    }
+    // 左利き用: 区画（数字・候補・入力キー）の並びを左右で逆にする。区画の中の並びは変えない（案内の準備 3 と同じ）
+    function mirror(keys) {
+      const span = z => { const ks = keys.filter(k => k.zone === z); return ks.length ? [Math.min(...ks.map(k => k.x)), Math.max(...ks.map(k => k.x + k.w))] : null; };
+      const n = span('N'), p = span('P'), r = span('R');
+      return keys.map(k => {
+        if (k.zone === 'R') return { ...k, x: 4 + (k.x - r[0]) };
+        if (k.zone === 'N') return { ...k, x: 801 - 4 - (n[1] - n[0]) + (k.x - n[0]) };
+        if (k.zone === 'P') {
+          const right = n ? 801 - 4 - (n[1] - n[0]) - (n[0] > p[1] ? n[0] - p[1] : p[0] - n[1]) : 801 - 4;
+          return { ...k, x: right - (p[1] - p[0]) + (k.x - p[0]) };
+        }
+        return { ...k, x: 801 - k.x - k.w };
+      });
+    }
+    document.querySelectorAll('.board').forEach(b => {
+      const cands = (b.dataset.cands || '').split(',').filter(Boolean);
+      const hl = new Set((b.dataset.hl || '').split(',').filter(Boolean));
+      let keys = build(b.dataset.face, cands);
+      if (b.dataset.mirror) keys = mirror(keys);
+      const pct = (v, of) => (v / of * 100) + '%';
+      keys.forEach(k => {
+        const d = document.createElement('div');
+        d.className = 'k ' + k.cls + (hl.has(k.label) ? ' hl' : '');
+        d.style.left = pct(k.x + 2, 801); d.style.top = pct(k.y + 2, 232);
+        d.style.width = pct(k.w - 4, 801); d.style.height = pct(k.h - 4, 232);
+        d.textContent = k.label;
+        if (k.hint) { const s = document.createElement('small'); s.textContent = k.hint; d.appendChild(s); }
+        b.appendChild(d);
+      });
+      if (b.dataset.thumbs) {
+        // アイコンと同じ比（幅 180 に半径 102）の円を下の両はしの角に（大きさは測った値ではない）
+        const r = 102 / 180 * 0.42 * 100;   // 幅に対する %
+        [0, 100].forEach(x => {
+          const t = document.createElement('div'); t.className = 'thumb';
+          t.style.width = t.style.height = (r * 2) + 'cqw';
+          t.style.left = `calc(${x}% - ${r}cqw)`; t.style.top = `calc(100% - ${r}cqw)`;
+          b.appendChild(t);
+        });
+      }
+      b.setAttribute('aria-hidden', 'true');
+    });
+  })();
 
   // ---------- 地形（上から見た森・川・道・地上絵。縦に長い 1 枚を作って流す） ----------
   const T = document.getElementById('terrain'), tg = T.getContext('2d');
@@ -438,7 +586,7 @@
   // ---------- 上の帯の AREA を、見えている区切りに合わせる ----------
   const hud = document.getElementById('hud-area');
   const io = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) hud.textContent = 'SUPPORT ' + e.target.dataset.area;
+    if (e.isIntersecting) hud.textContent = e.target.dataset.hud || ('AREA ' + e.target.dataset.area);
   }), { threshold: 0.5 });
   document.querySelectorAll('section[data-area]').forEach(s => io.observe(s));
 })();
