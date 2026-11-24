@@ -213,6 +213,23 @@
   .stage.final small { color: var(--alert); }
   .prompt { margin-top: 28px; font-size: clamp(28px, 4.4vw, 52px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
   .prompt b { color: var(--sea); }
+  /* ---- 両手で撃ちまくる区切り（ゲームのコントローラーの見立て） ---- */
+  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 36px; max-width: 900px; }
+  .pad {
+    position: relative; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #000d; border: var(--pixel) solid var(--hud); cursor: pointer; user-select: none; -webkit-user-select: none;
+    box-shadow: 0 0 0 var(--pixel) #000, var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+    transition: none;
+  }
+  .pad .stick { width: 84px; height: 84px; border-radius: 50%; border: 6px solid currentColor; box-shadow: inset 0 0 0 10px #000, inset 0 0 0 16px currentColor; }
+  .pad .label { margin-top: 16px; font: 900 15px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em; }
+  .pad .label small { display: block; margin-top: 8px; font-size: 13px; letter-spacing: .1em; font-weight: 700; color: #ddd; }
+  .pad.left { color: var(--sea); } .pad.right { color: var(--alert); }
+  .pad.fire { transform: translate(2px, 2px); background: currentColor; }
+  .pad.fire .label, .pad.fire .label small { color: #000; }
+  .try { margin-top: 22px; font: 700 14px/1.8 ui-monospace, Menlo, monospace; letter-spacing: .12em; color: #fff; text-shadow: 2px 2px 0 #000; }
+  .hud .hits { color: #ffd166; }
+  @media (max-width: 700px) { .pads { grid-template-columns: 1fr 1fr; gap: 14px; } .pad { min-height: 140px; } }
 </style>
 </head>
 <body>
@@ -222,6 +239,7 @@
 <header class="hud">
   <a class="tag" href="index.html#top">DUAL WIELD KEYBOARD</a>
   <span id="hud-area">PRIVACY</span>
+  <span class="hits" id="hud-hits">HIT 000</span>
   <nav>
     <a href="index.html#feature">FEATURE</a>
     <a href="index.html#setup">READY</a>
@@ -236,14 +254,14 @@
 
 <main>
   <section data-area="S1" data-hud="PRIVACY" style="min-height:auto;padding-top:140px;">
-    <div class="area">PRIVACY POLICY · EFFECTIVE NOV 24, 2026</div>
+    <div class="area">PRIVACY POLICY · EFFECTIVE NOV 25, 2026</div>
     <h2>What you type<br>stays on your device<span class="dot">.</span></h2>
     <p class="lead">This policy covers the data handled by Dual Wield Keyboard (the app and its keyboard). Dual Wield Keyboard is provided by Tengaira (Hideto Minegishi).</p>
     <div class="row" style="max-width:900px">
-      <div class="panel"><div class="no">01 · DATA WE COLLECT</div><h3>None.</h3><p>Neither the app nor the keyboard uses the network. Nothing you type, no readings, no words you pick, and no usage records ever leave your device. There are no analytics or advertising tools.</p></div>
+      <div class="panel"><div class="no">01 · DATA WE COLLECT</div><h3>None.</h3><p>The keyboard never uses the network. The app connects only for the free trial and purchase, which are handled by Apple’s App Store. Nothing you type, no readings, no words you pick, and no usage records ever leave your device. There are no analytics or advertising tools.</p></div>
       <div class="panel"><div class="no">02 · FULL ACCESS</div><h3>Never requested.</h3><p>The keyboard works without “Allow Full Access”, so it cannot use the network.</p></div>
       <div class="panel"><div class="no">03 · CONVERSION</div><h3>On your device only.</h3><p>Japanese conversion runs on your device, using Mozc and the dictionary bundled with the app. Conversion doesn’t learn, and what you type and the words you pick are never stored.</p></div>
-      <div class="panel"><div class="no">04 · WHAT STAYS ON YOUR DEVICE</div><h3>Settings and game records only.</h3><p>Keyboard: the left/right swap, the typing style you chose for each screen width (flick or QWERTY), and the conversion settings files (with no learned data). App: whether you finished the first-run guide, your best time in the typing game and its split times, and which stages you cleared. None of these include anything you typed.</p></div>
+      <div class="panel"><div class="no">04 · WHAT STAYS ON YOUR DEVICE</div><h3>Settings and game records only.</h3><p>Keyboard: the left/right swap, the typing style you chose for each screen width (flick or QWERTY), and the conversion settings files (with no learned data). App: whether you finished the first-run guide, your best time in the typing game and its split times, and which stages you cleared. Also the end date of your free trial and whether you bought the app (kept in a container shared by the app and the keyboard, so the keyboard can read it). None of these include anything you typed.</p></div>
       <div class="panel"><div class="no">05 · THIRD PARTIES</div><h3>Nothing is shared.</h3><p>We don’t share any data with third parties. Purchases and payments happen on the App Store under Apple’s privacy policy.</p></div>
       <div class="panel"><div class="no">06 · DELETING YOUR DATA</div><h3>Delete the app, and it’s gone.</h3><p>Everything stored on your device is removed when you delete Dual Wield Keyboard. To stop using just the keyboard, remove it in Settings → General → Keyboard → Keyboards. We don’t hold any of your data, so there’s nothing to request for deletion.</p></div>
       <div class="panel"><div class="no">07 · CHANGES AND CONTACT</div><h3>Changes are posted here.</h3><p>If this policy changes, we’ll update this page and its effective date. Questions: contact@tengaira.com.</p></div>
@@ -483,6 +501,28 @@
   let shipX = 0.5, targetX = 0.5, t = 0, travel = 0;
   const shots = [], keys = [], sparks = [];
   const KANA = 'あかさたなはまやらわ';
+  let hits = 0, lastSide = 'right';
+  const hitsLabel = document.getElementById('hud-hits');
+  const LEFT_KEYS = new Set('`12345qwertasdfgzxcvb'.split(''));
+  // その側の砲から、3 発まとめて撃つ（叩いた手の側）
+  function fire(side) {
+    if (reduce) return;
+    for (let n = 0; n < 3; n++) shots.push({ side, x: null, y: null, delay: n * 3 });
+    lastSide = side;
+    document.querySelectorAll('.pad[data-side="' + side + '"]').forEach(p => {
+      p.classList.add('fire'); setTimeout(() => p.classList.remove("fire"), 160);
+    });
+  }
+  addEventListener('pointerdown', e => {
+    // リンクとボタンを押したときは撃たない
+    if (e.target.closest('a, button')) return;
+    const pad = e.target.closest('.pad');
+    fire(pad ? pad.dataset.side : (e.clientX < innerWidth / 2 ? 'left' : 'right'));
+  }, { passive: true });
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    fire(LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right');
+  });
   addEventListener('pointermove', e => { targetX = e.clientX / innerWidth; });
 
   // 自前のドット絵の自機（両翼に 1 門ずつ。左が青＝選ぶ、右が赤＝打つ）
@@ -513,14 +553,19 @@
     const sx = (shipX * W) | 0, sy = H - 24;
 
     if (!reduce) {
-      // 右の砲: 弾を撃ち続ける
-      if (t % 7 === 0) shots.push({ x: sx + 5, y: sy });
+      // 2 門が交互に撃ち続ける（左が青、右が赤）
+      if (t % 9 === 0) shots.push({ side: (t / 9) % 2 ? 'left' : 'right', x: null, y: null, delay: 0 });
       // 上からキーが落ちてくる
       if (t % 40 === 0) keys.push({ x: 8 + Math.random() * (W - 16), y: -10, ch: KANA[(Math.random() * KANA.length) | 0], hp: 3 });
     }
-    sg.fillStyle = '#fff7c2';
     for (let i = shots.length - 1; i >= 0; i--) {
-      const s = shots[i]; s.y -= 4; sg.fillRect(s.x, s.y, 1, 3);
+      const s = shots[i];
+      if (s.delay > 0) { s.delay--; continue; }
+      // 撃った瞬間の自機の位置から、その側の砲口で出る
+      if (s.x === null) { s.x = s.side === 'left' ? sx - 6 : sx + 5; s.y = sy + 4; }
+      s.y -= 4;
+      sg.fillStyle = s.side === 'left' ? '#8fd0ff' : '#ffb3ad';
+      sg.fillRect(s.x, s.y, 1, 3);
       if (s.y < -4) shots.splice(i, 1);
     }
     sg.font = 'bold 9px "Hiragino Sans", sans-serif'; sg.textAlign = 'center'; sg.textBaseline = 'middle';
@@ -533,11 +578,13 @@
       sg.fillStyle = '#1b2533'; sg.fillText(k.ch, k.x - 0.5, k.y + 0.5);
       for (let j = shots.length - 1; j >= 0; j--) {
         const s = shots[j];
-        if (Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
+        if (s.x !== null && Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
       }
       if (k.hp <= 0) {
         for (let n = 0; n < 12; n++) sparks.push({ x: k.x, y: k.y, vx: (Math.random() - .5) * 3, vy: (Math.random() - .5) * 3, life: 18 });
         keys.splice(i, 1);
+        hits++;
+        if (hitsLabel) hitsLabel.textContent = 'HIT ' + String(hits).padStart(3, '0');
       } else if (k.y > H + 10) keys.splice(i, 1);
     }
     for (let i = sparks.length - 1; i >= 0; i--) {

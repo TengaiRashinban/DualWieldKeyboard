@@ -213,6 +213,23 @@
   .stage.final small { color: var(--alert); }
   .prompt { margin-top: 28px; font-size: clamp(28px, 4.4vw, 52px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
   .prompt b { color: var(--sea); }
+  /* ---- 両手で撃ちまくる区切り（ゲームのコントローラーの見立て） ---- */
+  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 36px; max-width: 900px; }
+  .pad {
+    position: relative; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #000d; border: var(--pixel) solid var(--hud); cursor: pointer; user-select: none; -webkit-user-select: none;
+    box-shadow: 0 0 0 var(--pixel) #000, var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+    transition: none;
+  }
+  .pad .stick { width: 84px; height: 84px; border-radius: 50%; border: 6px solid currentColor; box-shadow: inset 0 0 0 10px #000, inset 0 0 0 16px currentColor; }
+  .pad .label { margin-top: 16px; font: 900 15px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em; }
+  .pad .label small { display: block; margin-top: 8px; font-size: 13px; letter-spacing: .1em; font-weight: 700; color: #ddd; }
+  .pad.left { color: var(--sea); } .pad.right { color: var(--alert); }
+  .pad.fire { transform: translate(2px, 2px); background: currentColor; }
+  .pad.fire .label, .pad.fire .label small { color: #000; }
+  .try { margin-top: 22px; font: 700 14px/1.8 ui-monospace, Menlo, monospace; letter-spacing: .12em; color: #fff; text-shadow: 2px 2px 0 #000; }
+  .hud .hits { color: #ffd166; }
+  @media (max-width: 700px) { .pads { grid-template-columns: 1fr 1fr; gap: 14px; } .pad { min-height: 140px; } }
 </style>
 </head>
 <body>
@@ -222,6 +239,7 @@
 <header class="hud">
   <a class="tag" href="index.ja.html#top">DUAL WIELD KEYBOARD</a>
   <span id="hud-area">SUPPORT</span>
+  <span class="hits" id="hud-hits">HIT 000</span>
   <nav>
     <a href="index.ja.html#feature">FEATURE</a>
     <a href="index.ja.html#setup">READY</a>
@@ -241,7 +259,7 @@
     <p class="lead">ご質問、不具合のご報告、ご意見をお待ちしています。日本語でも英語でもかまいません。</p>
     <div class="row" style="max-width:900px">
       <div class="panel"><div class="no">CONTACT</div><h3><a href="mailto:contact@tengaira.com" style="color:inherit">contact@tengaira.com</a></h3><p>不具合のときは、お使いの機種（iPad の型・iPhone Duo）、OS の版、縦か横か、どの面で起きたかを添えてください。</p></div>
-      <div class="panel"><div class="no">提供者</div><h3>Tengaira（Hideto Minegishi）</h3><p>Dual Wield Keyboard は App Store で、日本では 600 円、米国では $3.99 の買い切りで提供します。</p></div>
+      <div class="panel"><div class="no">提供者</div><h3>Tengaira（Hideto Minegishi）</h3><p>Dual Wield Keyboard は App Store で無料で配り、7 日間の無料体験の後、アプリの中で 1 回だけ購入していただきます（日本 600 円・米国 $3.99）。</p></div>
     </div>
   </section>
   <section data-area="S2" data-hud="SUPPORT" style="min-height:auto;">
@@ -254,7 +272,7 @@
       <div class="panel"><div class="no">Q4 · 変換</div><h3>よく使う言葉を覚えてくれません。</h3><p>そういう作りです。打った読みと確定した言葉を書き残さないため、変換の学習をしません。</p></div>
       <div class="panel"><div class="no">Q5 · 打った字</div><h3>打った字は、どこかへ送られますか？</h3><p>送られません。キーボードは通信をせず、かな漢字変換も端末の中で行います。くわしくはプライバシーポリシーをご覧ください。</p></div>
       <div class="panel"><div class="no">Q6 · 地球儀</div><h3>キーボードの中に地球儀がありません。</h3><p>地球儀をキーボードの下に出す機種では、そちらの地球儀を使ってください。その機種では、キーボードの中には出しません。</p></div>
-      <div class="panel"><div class="no">Q7 · 支払いと返金</div><h3>支払いと返金は？</h3><p>代金は App Store で払います。月額や追加の購入はありません。返金は Apple が扱うので、reportaproblem.apple.com からお申し込みください。</p></div>
+      <div class="panel"><div class="no">Q7 · 無料体験と購入</div><h3>無料体験と購入は？</h3><p>アプリは無料です。アプリの中で 7 日間の無料体験を始められ、その後も使うには、アプリの中で 1 回だけ購入します（600 円）。月額はありません。購入と返金は Apple が扱います。返金は reportaproblem.apple.com からお申し込みください。</p></div>
     </div>
   </section>
   <section data-area="S3" data-hud="PRIVACY" style="min-height:auto;">
@@ -496,6 +514,28 @@
   let shipX = 0.5, targetX = 0.5, t = 0, travel = 0;
   const shots = [], keys = [], sparks = [];
   const KANA = 'あかさたなはまやらわ';
+  let hits = 0, lastSide = 'right';
+  const hitsLabel = document.getElementById('hud-hits');
+  const LEFT_KEYS = new Set('`12345qwertasdfgzxcvb'.split(''));
+  // その側の砲から、3 発まとめて撃つ（叩いた手の側）
+  function fire(side) {
+    if (reduce) return;
+    for (let n = 0; n < 3; n++) shots.push({ side, x: null, y: null, delay: n * 3 });
+    lastSide = side;
+    document.querySelectorAll('.pad[data-side="' + side + '"]').forEach(p => {
+      p.classList.add('fire'); setTimeout(() => p.classList.remove("fire"), 160);
+    });
+  }
+  addEventListener('pointerdown', e => {
+    // リンクとボタンを押したときは撃たない
+    if (e.target.closest('a, button')) return;
+    const pad = e.target.closest('.pad');
+    fire(pad ? pad.dataset.side : (e.clientX < innerWidth / 2 ? 'left' : 'right'));
+  }, { passive: true });
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    fire(LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right');
+  });
   addEventListener('pointermove', e => { targetX = e.clientX / innerWidth; });
 
   // 自前のドット絵の自機（両翼に 1 門ずつ。左が青＝選ぶ、右が赤＝打つ）
@@ -526,14 +566,19 @@
     const sx = (shipX * W) | 0, sy = H - 24;
 
     if (!reduce) {
-      // 右の砲: 弾を撃ち続ける
-      if (t % 7 === 0) shots.push({ x: sx + 5, y: sy });
+      // 2 門が交互に撃ち続ける（左が青、右が赤）
+      if (t % 9 === 0) shots.push({ side: (t / 9) % 2 ? 'left' : 'right', x: null, y: null, delay: 0 });
       // 上からキーが落ちてくる
       if (t % 40 === 0) keys.push({ x: 8 + Math.random() * (W - 16), y: -10, ch: KANA[(Math.random() * KANA.length) | 0], hp: 3 });
     }
-    sg.fillStyle = '#fff7c2';
     for (let i = shots.length - 1; i >= 0; i--) {
-      const s = shots[i]; s.y -= 4; sg.fillRect(s.x, s.y, 1, 3);
+      const s = shots[i];
+      if (s.delay > 0) { s.delay--; continue; }
+      // 撃った瞬間の自機の位置から、その側の砲口で出る
+      if (s.x === null) { s.x = s.side === 'left' ? sx - 6 : sx + 5; s.y = sy + 4; }
+      s.y -= 4;
+      sg.fillStyle = s.side === 'left' ? '#8fd0ff' : '#ffb3ad';
+      sg.fillRect(s.x, s.y, 1, 3);
       if (s.y < -4) shots.splice(i, 1);
     }
     sg.font = 'bold 9px "Hiragino Sans", sans-serif'; sg.textAlign = 'center'; sg.textBaseline = 'middle';
@@ -546,11 +591,13 @@
       sg.fillStyle = '#1b2533'; sg.fillText(k.ch, k.x - 0.5, k.y + 0.5);
       for (let j = shots.length - 1; j >= 0; j--) {
         const s = shots[j];
-        if (Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
+        if (s.x !== null && Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
       }
       if (k.hp <= 0) {
         for (let n = 0; n < 12; n++) sparks.push({ x: k.x, y: k.y, vx: (Math.random() - .5) * 3, vy: (Math.random() - .5) * 3, life: 18 });
         keys.splice(i, 1);
+        hits++;
+        if (hitsLabel) hitsLabel.textContent = 'HIT ' + String(hits).padStart(3, '0');
       } else if (k.y > H + 10) keys.splice(i, 1);
     }
     for (let i = sparks.length - 1; i >= 0; i--) {

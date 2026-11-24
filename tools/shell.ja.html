@@ -217,6 +217,23 @@
   .stage.final small { color: var(--alert); }
   .prompt { margin-top: 28px; font-size: clamp(28px, 4.4vw, 52px); font-weight: 900; text-shadow: 3px 3px 0 #000; }
   .prompt b { color: var(--sea); }
+  /* ---- 両手で撃ちまくる区切り（ゲームのコントローラーの見立て） ---- */
+  .pads { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 36px; max-width: 900px; }
+  .pad {
+    position: relative; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #000d; border: var(--pixel) solid var(--hud); cursor: pointer; user-select: none; -webkit-user-select: none;
+    box-shadow: 0 0 0 var(--pixel) #000, var(--pixel) var(--pixel) 0 var(--pixel) var(--sea);
+    transition: none;
+  }
+  .pad .stick { width: 84px; height: 84px; border-radius: 50%; border: 6px solid currentColor; box-shadow: inset 0 0 0 10px #000, inset 0 0 0 16px currentColor; }
+  .pad .label { margin-top: 16px; font: 900 15px/1 ui-monospace, Menlo, monospace; letter-spacing: .3em; }
+  .pad .label small { display: block; margin-top: 8px; font-size: 13px; letter-spacing: .1em; font-weight: 700; color: #ddd; }
+  .pad.left { color: var(--sea); } .pad.right { color: var(--alert); }
+  .pad.fire { transform: translate(2px, 2px); background: currentColor; }
+  .pad.fire .label, .pad.fire .label small { color: #000; }
+  .try { margin-top: 22px; font: 700 14px/1.8 ui-monospace, Menlo, monospace; letter-spacing: .12em; color: #fff; text-shadow: 2px 2px 0 #000; }
+  .hud .hits { color: #ffd166; }
+  @media (max-width: 700px) { .pads { grid-template-columns: 1fr 1fr; gap: 14px; } .pad { min-height: 140px; } }
 </style>
 </head>
 <body>
@@ -226,6 +243,7 @@
 <header class="hud">
   <a class="tag" href="#top">DUAL WIELD KEYBOARD</a>
   <span id="hud-area">AREA 00</span>
+  <span class="hits" id="hud-hits">HIT 000</span>
   <nav>
     <a href="#feature">FEATURE</a>
     <a href="#setup">READY</a>
@@ -245,8 +263,19 @@
       <canvas id="logo2" role="img" aria-label="KEYBOARD"></canvas>
     </div>
     <h1>Dual Wield Keyboard</h1>
-    <p class="lead">握ったまま、両手の親指で打つ。<br>片手で字を打ち、もう片手で数字と漢字を選ぶ。iPhone Duo と iPad のためのキーボード。</p>
+    <p class="lead"><b>Duo も iPad もキーボードは両手打ち。</b><br>右の親指で字を打ち、左の親指で候補を選ぶ。握ったまま、両手が同時に働きます。</p>
     <div class="blink">SCROLL TO START</div>
+  </section>
+
+  <section id="twin" data-area="00" data-hud="TWIN FIRE">
+    <div class="area">TWIN FIRE · <b>DUAL WIELD</b></div>
+    <h2>ゲームのように、<br>両手で撃ちまくれ<span class="dot">。</span></h2>
+    <p class="lead">左手は狙って、候補を撃ち抜く。右手は、字を撃ち込む。ジョイスティックを握るように両はしを持って、キーボードを両手で乱打する。</p>
+    <div class="pads">
+      <div class="pad left" data-side="left"><div class="stick"></div><div class="label">LEFT<small>狙う · 候補を選ぶ</small></div></div>
+      <div class="pad right" data-side="right"><div class="stick"></div><div class="label">RIGHT<small>撃つ · 字を打つ</small></div></div>
+    </div>
+    <p class="try">TRY IT — 画面の左右を叩くと、左右の砲が撃ちます。キーボードなら、左手側のキーと右手側のキーで。</p>
   </section>
 
   <section id="feature" data-area="01">
@@ -322,12 +351,13 @@
       <div class="stage final"><small>本番</small>時間を測る<em>自分の記録と並ぶ</em></div>
     </div>
     <div class="prompt">今日は<b>3</b>人で<b>10</b>時に集まる</div>
+    <div class="row" style="max-width:900px;margin-top:28px"><div class="panel"><div class="no">日本語対応特典</div><h3>郵便番号から住所</h3><p>7 桁の郵便番号を打つと、住所の候補が出ます。</p></div></div>
   </section>
 
   <section id="price" class="coin" data-area="06">
     <div class="area">AREA <b>06</b> · INSERT COIN</div>
-    <div class="credit">¥600<small> / $3.99</small></div>
-    <div class="sub">1 COIN · 買い切り · 月額なし<br>iPad・iPhone Duo（OS の版 27.2 以降）</div>
+    <div class="credit">FREE<small> 7 日間</small></div>
+    <div class="sub">7 日間の無料体験 · その後、アプリの中で 1 回だけ購入（600 円）· 月額なし<br>iPad・iPhone Duo（OS の版 27.2 以降）</div>
     <div><span class="start">COMING SOON · App Store で近日公開</span></div>
   </section>
 </main>
@@ -564,6 +594,28 @@
   let shipX = 0.5, targetX = 0.5, t = 0, travel = 0;
   const shots = [], keys = [], sparks = [];
   const KANA = 'あかさたなはまやらわ';
+  let hits = 0, lastSide = 'right';
+  const hitsLabel = document.getElementById('hud-hits');
+  const LEFT_KEYS = new Set('`12345qwertasdfgzxcvb'.split(''));
+  // その側の砲から、3 発まとめて撃つ（叩いた手の側）
+  function fire(side) {
+    if (reduce) return;
+    for (let n = 0; n < 3; n++) shots.push({ side, x: null, y: null, delay: n * 3 });
+    lastSide = side;
+    document.querySelectorAll('.pad[data-side="' + side + '"]').forEach(p => {
+      p.classList.add('fire'); setTimeout(() => p.classList.remove("fire"), 160);
+    });
+  }
+  addEventListener('pointerdown', e => {
+    // リンクとボタンを押したときは撃たない
+    if (e.target.closest('a, button')) return;
+    const pad = e.target.closest('.pad');
+    fire(pad ? pad.dataset.side : (e.clientX < innerWidth / 2 ? 'left' : 'right'));
+  }, { passive: true });
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    fire(LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right');
+  });
   addEventListener('pointermove', e => { targetX = e.clientX / innerWidth; });
 
   // 自前のドット絵の自機（両翼に 1 門ずつ。左が青＝選ぶ、右が赤＝打つ）
@@ -594,14 +646,19 @@
     const sx = (shipX * W) | 0, sy = H - 24;
 
     if (!reduce) {
-      // 右の砲: 弾を撃ち続ける
-      if (t % 7 === 0) shots.push({ x: sx + 5, y: sy });
+      // 2 門が交互に撃ち続ける（左が青、右が赤）
+      if (t % 9 === 0) shots.push({ side: (t / 9) % 2 ? 'left' : 'right', x: null, y: null, delay: 0 });
       // 上からキーが落ちてくる
       if (t % 40 === 0) keys.push({ x: 8 + Math.random() * (W - 16), y: -10, ch: KANA[(Math.random() * KANA.length) | 0], hp: 3 });
     }
-    sg.fillStyle = '#fff7c2';
     for (let i = shots.length - 1; i >= 0; i--) {
-      const s = shots[i]; s.y -= 4; sg.fillRect(s.x, s.y, 1, 3);
+      const s = shots[i];
+      if (s.delay > 0) { s.delay--; continue; }
+      // 撃った瞬間の自機の位置から、その側の砲口で出る
+      if (s.x === null) { s.x = s.side === 'left' ? sx - 6 : sx + 5; s.y = sy + 4; }
+      s.y -= 4;
+      sg.fillStyle = s.side === 'left' ? '#8fd0ff' : '#ffb3ad';
+      sg.fillRect(s.x, s.y, 1, 3);
       if (s.y < -4) shots.splice(i, 1);
     }
     sg.font = 'bold 9px "Hiragino Sans", sans-serif'; sg.textAlign = 'center'; sg.textBaseline = 'middle';
@@ -614,11 +671,13 @@
       sg.fillStyle = '#1b2533'; sg.fillText(k.ch, k.x - 0.5, k.y + 0.5);
       for (let j = shots.length - 1; j >= 0; j--) {
         const s = shots[j];
-        if (Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
+        if (s.x !== null && Math.abs(s.x - k.x) < 7 && Math.abs(s.y - k.y) < 7) { shots.splice(j, 1); k.hp--; }
       }
       if (k.hp <= 0) {
         for (let n = 0; n < 12; n++) sparks.push({ x: k.x, y: k.y, vx: (Math.random() - .5) * 3, vy: (Math.random() - .5) * 3, life: 18 });
         keys.splice(i, 1);
+        hits++;
+        if (hitsLabel) hitsLabel.textContent = 'HIT ' + String(hits).padStart(3, '0');
       } else if (k.y > H + 10) keys.splice(i, 1);
     }
     for (let i = sparks.length - 1; i >= 0; i--) {
