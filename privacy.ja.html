@@ -41,14 +41,17 @@
     background: linear-gradient(#000c, #0000);
   }
   .hud .tag { color: var(--hud); text-decoration: none; }
-  .hud nav { display: flex; gap: 22px; margin-left: auto; }
+  .hud nav { display: flex; gap: 22px; margin-left: auto; align-items: center; }
   .hud a { color: var(--hud); text-decoration: none; }
   .hud a:hover { color: var(--sea); }
   .hud .store {
     border: 2px solid var(--hud); padding: 8px 12px;
     box-shadow: 4px 4px 0 var(--sea);
   }
-  @media (max-width: 900px) { .hud nav a:not(.store) { display: none; } }
+  /* 上の帯は折り返さない。幅が足りなければ、目次から隠す（言語の切り替えと App Store は残す） */
+  .hud, .hud > *, .hud nav > * { white-space: nowrap; }
+  @media (max-width: 1240px) { .hud nav > a:not(.lang) { display: none; } }
+  @media (max-width: 720px) { .hud #hud-area, .hud .hits { display: none; } .hud { gap: 14px; padding: 12px 16px; } }
 
   section {
     min-height: 100vh;
@@ -230,6 +233,10 @@
   .try { margin-top: 22px; font: 700 14px/1.8 ui-monospace, Menlo, monospace; letter-spacing: .12em; color: #fff; text-shadow: 2px 2px 0 #000; }
   .hud .hits { color: #ffd166; }
   @media (max-width: 700px) { .pads { grid-template-columns: 1fr 1fr; gap: 14px; } .pad { min-height: 140px; } }
+  /* 改行の位置: 句の途中で折らない・最後の行に 1 文字だけ残さない */
+  .nw { white-space: nowrap; display: inline-block; }
+  h1, h2, h3 { text-wrap: balance; }
+  p, .point p, .panel p, .try, .note { text-wrap: pretty; }
 </style>
 </head>
 <body>
@@ -247,7 +254,7 @@
     <a href="index.ja.html#faces">FACES</a>
     <a href="index.ja.html#game">BONUS</a>
     <a href="index.ja.html#price">PRICE</a>
-    <a href="privacy.html" lang="en">EN</a>
+    <a class="lang" href="privacy.html" lang="en">EN</a>
     <span class="store">App Store で近日公開</span>
   </nav>
 </header>
@@ -498,7 +505,9 @@
   addEventListener('resize', resize); resize();
 
   // ---------- 自機・弾・照準・落ちてくるキー ----------
-  let shipX = 0.5, targetX = 0.5, t = 0, travel = 0;
+  let shipX = 0.5, targetX = 0.5, shipY = 0.88, targetY = 0.88, t = 0, travel = 0;
+  // 縦は画面の下半分だけ（0.5〜0.92）
+  const clampY = y => Math.min(0.92, Math.max(0.5, y));
   const shots = [], keys = [], sparks = [];
   const KANA = 'あかさたなはまやらわ';
   let hits = 0, lastSide = 'right';
@@ -517,13 +526,23 @@
     // リンクとボタンを押したときは撃たない
     if (e.target.closest('a, button')) return;
     const pad = e.target.closest('.pad');
+    // 叩いた所へ自機が寄っていく（左右を乱打すると、左右を行き来しながら撃つ）
+    targetX = e.clientX / innerWidth;
+    targetY = clampY(e.clientY / innerHeight);
     fire(pad ? pad.dataset.side : (e.clientX < innerWidth / 2 ? 'left' : 'right'));
   }, { passive: true });
   addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
-    fire(LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right');
+    const side = LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right';
+    targetX = Math.min(0.95, Math.max(0.05, targetX + (side === 'left' ? -0.04 : 0.04)));
+    fire(side);
   });
-  addEventListener('pointermove', e => { targetX = e.clientX / innerWidth; });
+  // マウスは縦横とも追いかける。指はなぞったときと、叩いた所へ寄る（pointerdown の側で）
+  addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch' && e.buttons === 0) return;
+    targetX = e.clientX / innerWidth;
+    targetY = clampY(e.clientY / innerHeight);
+  }, { passive: true });
 
   // 自前のドット絵の自機（両翼に 1 門ずつ。左が青＝選ぶ、右が赤＝打つ）
   const SHIP = [
@@ -549,8 +568,12 @@
     tg.drawImage(map, 0, oy, W, H, 0, 0, W, H);
 
     sg.clearRect(0, 0, W, H);
-    shipX += (targetX - shipX) * 0.08;
-    const sx = (shipX * W) | 0, sy = H - 24;
+    const vx = (targetX - shipX) * 0.08;
+    shipX += vx;
+    shipY += (targetY - shipY) * 0.08;
+    const sx = (shipX * W) | 0, sy = Math.min(H - 14, (shipY * H) | 0);
+    // 傾き: 左へ動いている間は左の翼が上がって細く見え、右へ動けば右の翼（-1・0・1）
+    const bank = Math.abs(vx) * W > 0.35 ? Math.sign(vx) : 0;
 
     if (!reduce) {
       // 2 門が交互に撃ち続ける（左が青、右が赤）
@@ -603,13 +626,15 @@
       sg.fillRect(cx - 5, cy + 5, 2, 1); sg.fillRect(cx + 4, cy + 5, 2, 1);
     }
     // 自機と影
+    const raised = x => (bank < 0 && x <= 1) || (bank > 0 && x >= 10);
+    const lowered = x => (bank < 0 && x >= 10) || (bank > 0 && x <= 1);
     SHIP.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch === '.') return;
+      if (ch === '.' || raised(x)) return;
       sg.fillStyle = '#0006'; sg.fillRect(sx - 6 + x + 6, sy + y + 8, 1, 1);
     }));
     SHIP.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch === '.') return;
-      sg.fillStyle = SHIPCOL[ch]; sg.fillRect(sx - 6 + x, sy + y, 1, 1);
+      if (ch === '.' || raised(x)) return;
+      sg.fillStyle = SHIPCOL[ch]; sg.fillRect(sx - 6 + x, sy + y + (lowered(x) ? 1 : 0), 1, 1);
     }));
 
     if (!reduce || t < 2) requestAnimationFrame(frame);

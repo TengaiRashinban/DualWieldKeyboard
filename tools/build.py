@@ -37,7 +37,7 @@ def page(lang, title, hud, nav_prefix, main, footer, switch_href, switch_label):
     <a href="{nav_prefix}#faces">FACES</a>
     <a href="{nav_prefix}#game">BONUS</a>
     <a href="{nav_prefix}#price">PRICE</a>
-    <a href="{switch_href}" lang="{'en' if lang == 'ja' else 'ja'}">{switch_label}</a>
+    <a class="lang" href="{switch_href}" lang="{'en' if lang == 'ja' else 'ja'}">{switch_label}</a>
     <span class="store">{store}</span>
   </nav>'''
     s = re.sub(r'<nav>.*?</nav>', nav, s, flags=re.S)
@@ -74,7 +74,7 @@ en_main = '''<main>
       <canvas id="logo2" role="img" aria-label="KEYBOARD"></canvas>
     </div>
     <h1>Dual Wield Keyboard</h1>
-    <p class="lead"><b>Duo or iPad: type with both hands.</b><br>Type with one thumb, pick the word with the other. Keep your grip, and both hands work at once.</p>
+    <p class="lead"><b class="nw">Duo or iPad: type with both hands.</b><br><span class="nw">Type with one thumb,</span> <span class="nw">pick the word with the other.</span><br><span class="nw">A firm hold,</span> <span class="nw">steady typing.</span></p>
     <div class="blink">SCROLL TO START</div>
   </section>
 

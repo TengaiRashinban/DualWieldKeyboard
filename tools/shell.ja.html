@@ -46,14 +46,17 @@
     background: linear-gradient(#000c, #0000);
   }
   .hud .tag { color: var(--hud); text-decoration: none; }
-  .hud nav { display: flex; gap: 22px; margin-left: auto; }
+  .hud nav { display: flex; gap: 22px; margin-left: auto; align-items: center; }
   .hud a { color: var(--hud); text-decoration: none; }
   .hud a:hover { color: var(--sea); }
   .hud .store {
     border: 2px solid var(--hud); padding: 8px 12px;
     box-shadow: 4px 4px 0 var(--sea);
   }
-  @media (max-width: 900px) { .hud nav a:not(.store) { display: none; } }
+  /* 上の帯は折り返さない。幅が足りなければ、目次から隠す（言語の切り替えと App Store は残す） */
+  .hud, .hud > *, .hud nav > * { white-space: nowrap; }
+  @media (max-width: 1240px) { .hud nav > a:not(.lang) { display: none; } }
+  @media (max-width: 720px) { .hud #hud-area, .hud .hits { display: none; } .hud { gap: 14px; padding: 12px 16px; } }
 
   section {
     min-height: 100vh;
@@ -234,6 +237,10 @@
   .try { margin-top: 22px; font: 700 14px/1.8 ui-monospace, Menlo, monospace; letter-spacing: .12em; color: #fff; text-shadow: 2px 2px 0 #000; }
   .hud .hits { color: #ffd166; }
   @media (max-width: 700px) { .pads { grid-template-columns: 1fr 1fr; gap: 14px; } .pad { min-height: 140px; } }
+  /* 改行の位置: 句の途中で折らない・最後の行に 1 文字だけ残さない */
+  .nw { white-space: nowrap; display: inline-block; }
+  h1, h2, h3 { text-wrap: balance; }
+  p, .point p, .panel p, .try, .note { text-wrap: pretty; }
 </style>
 </head>
 <body>
@@ -263,14 +270,14 @@
       <canvas id="logo2" role="img" aria-label="KEYBOARD"></canvas>
     </div>
     <h1>Dual Wield Keyboard</h1>
-    <p class="lead"><b>Duo も iPad もキーボードは両手打ち。</b><br>右の親指で字を打ち、左の親指で候補を選ぶ。握ったまま、両手が同時に働きます。</p>
+    <p class="lead"><b class="nw">Duo も iPad もキーボードは両手打ち。</b><br><span class="nw">右の親指で字を打ち、</span><span class="nw">左の親指で候補を選ぶ。</span><br><span class="nw">しっかりホールド、</span><span class="nw">安定入力。</span></p>
     <div class="blink">SCROLL TO START</div>
   </section>
 
   <section id="twin" data-area="00" data-hud="TWIN FIRE">
     <div class="area">TWIN FIRE · <b>DUAL WIELD</b></div>
     <h2>ゲームのように、<br>両手で撃ちまくれ<span class="dot">。</span></h2>
-    <p class="lead">左手は狙って、候補を撃ち抜く。右手は、字を撃ち込む。ジョイスティックを握るように両はしを持って、キーボードを両手で乱打する。</p>
+    <p class="lead"><span class="nw">左手は狙って、</span><span class="nw">候補を撃ち抜く。</span><span class="nw">右手は、</span><span class="nw">字を撃ち込む。</span><br><span class="nw">ジョイスティックを握るように</span><span class="nw">両はしを持って、</span><span class="nw">キーボードを</span><span class="nw">両手で乱打する。</span></p>
     <div class="pads">
       <div class="pad left" data-side="left"><div class="stick"></div><div class="label">LEFT<small>狙う · 候補を選ぶ</small></div></div>
       <div class="pad right" data-side="right"><div class="stick"></div><div class="label">RIGHT<small>撃つ · 字を打つ</small></div></div>
@@ -314,7 +321,7 @@
   <section id="practice" data-area="03">
     <div class="area">AREA <b>03</b> · PRACTICE</div>
     <h2>「あき」と打って、<br>「秋」を押す<span class="dot">。</span></h2>
-    <p class="lead">「あ」は押すだけ。「き」は「か」を押したまま左へすべらせる。もう片方の手で、候補の「秋」を押す。</p>
+    <p class="lead"><span class="nw">「あ」は押すだけ。</span><span class="nw">「き」は「か」を押したまま</span><span class="nw">左へすべらせる。</span><br><span class="nw">もう片方の手で、</span><span class="nw">候補の「秋」を押す。</span></p>
     <div class="practice"><span class="ok">あ</span><span class="ok">き</span><b>→</b><span class="ok">秋</span><em>✓ できました</em></div>
     <div class="screen">
       <div class="field"><u>あき</u></div>
@@ -342,7 +349,7 @@
   <section id="game" data-area="05">
     <div class="area">AREA <b>05</b> · BONUS STAGE</div>
     <h2>1 文を、5 面で組み立てる<span class="dot">。</span></h2>
-    <p class="lead">はじめての案内の最後は、小さなゲーム。1 手ずつ足して 1 文を打ち切り、本番は自分の記録と並んで打ちます。</p>
+    <p class="lead"><span class="nw">はじめての案内の最後は、</span><span class="nw">小さなゲーム。</span><br><span class="nw">1 手ずつ足して</span><span class="nw">1 文を打ち切り、</span><span class="nw">本番は</span><span class="nw">自分の記録と並んで打ちます。</span></p>
     <div class="stages">
       <div class="stage on"><small>1 面</small>今日は<em>打つ手で読み、反対の手で候補</em></div>
       <div class="stage"><small>2 面</small>＋3<em>候補で確定してから、数字</em></div>
@@ -591,7 +598,9 @@
   addEventListener('resize', resize); resize();
 
   // ---------- 自機・弾・照準・落ちてくるキー ----------
-  let shipX = 0.5, targetX = 0.5, t = 0, travel = 0;
+  let shipX = 0.5, targetX = 0.5, shipY = 0.88, targetY = 0.88, t = 0, travel = 0;
+  // 縦は画面の下半分だけ（0.5〜0.92）
+  const clampY = y => Math.min(0.92, Math.max(0.5, y));
   const shots = [], keys = [], sparks = [];
   const KANA = 'あかさたなはまやらわ';
   let hits = 0, lastSide = 'right';
@@ -610,13 +619,23 @@
     // リンクとボタンを押したときは撃たない
     if (e.target.closest('a, button')) return;
     const pad = e.target.closest('.pad');
+    // 叩いた所へ自機が寄っていく（左右を乱打すると、左右を行き来しながら撃つ）
+    targetX = e.clientX / innerWidth;
+    targetY = clampY(e.clientY / innerHeight);
     fire(pad ? pad.dataset.side : (e.clientX < innerWidth / 2 ? 'left' : 'right'));
   }, { passive: true });
   addEventListener('keydown', e => {
     if (e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
-    fire(LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right');
+    const side = LEFT_KEYS.has(e.key.toLowerCase()) ? 'left' : 'right';
+    targetX = Math.min(0.95, Math.max(0.05, targetX + (side === 'left' ? -0.04 : 0.04)));
+    fire(side);
   });
-  addEventListener('pointermove', e => { targetX = e.clientX / innerWidth; });
+  // マウスは縦横とも追いかける。指はなぞったときと、叩いた所へ寄る（pointerdown の側で）
+  addEventListener('pointermove', e => {
+    if (e.pointerType === 'touch' && e.buttons === 0) return;
+    targetX = e.clientX / innerWidth;
+    targetY = clampY(e.clientY / innerHeight);
+  }, { passive: true });
 
   // 自前のドット絵の自機（両翼に 1 門ずつ。左が青＝選ぶ、右が赤＝打つ）
   const SHIP = [
@@ -642,8 +661,12 @@
     tg.drawImage(map, 0, oy, W, H, 0, 0, W, H);
 
     sg.clearRect(0, 0, W, H);
-    shipX += (targetX - shipX) * 0.08;
-    const sx = (shipX * W) | 0, sy = H - 24;
+    const vx = (targetX - shipX) * 0.08;
+    shipX += vx;
+    shipY += (targetY - shipY) * 0.08;
+    const sx = (shipX * W) | 0, sy = Math.min(H - 14, (shipY * H) | 0);
+    // 傾き: 左へ動いている間は左の翼が上がって細く見え、右へ動けば右の翼（-1・0・1）
+    const bank = Math.abs(vx) * W > 0.35 ? Math.sign(vx) : 0;
 
     if (!reduce) {
       // 2 門が交互に撃ち続ける（左が青、右が赤）
@@ -696,13 +719,15 @@
       sg.fillRect(cx - 5, cy + 5, 2, 1); sg.fillRect(cx + 4, cy + 5, 2, 1);
     }
     // 自機と影
+    const raised = x => (bank < 0 && x <= 1) || (bank > 0 && x >= 10);
+    const lowered = x => (bank < 0 && x >= 10) || (bank > 0 && x <= 1);
     SHIP.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch === '.') return;
+      if (ch === '.' || raised(x)) return;
       sg.fillStyle = '#0006'; sg.fillRect(sx - 6 + x + 6, sy + y + 8, 1, 1);
     }));
     SHIP.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch === '.') return;
-      sg.fillStyle = SHIPCOL[ch]; sg.fillRect(sx - 6 + x, sy + y, 1, 1);
+      if (ch === '.' || raised(x)) return;
+      sg.fillStyle = SHIPCOL[ch]; sg.fillRect(sx - 6 + x, sy + y + (lowered(x) ? 1 : 0), 1, 1);
     }));
 
     if (!reduce || t < 2) requestAnimationFrame(frame);
