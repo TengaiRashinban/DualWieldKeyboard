@@ -165,8 +165,8 @@ en_main = '''<main>
 
   <section id="price" class="coin" data-area="06">
     <div class="area">AREA <b>06</b> · INSERT COIN</div>
-    <div class="credit">FREE<small> 7 DAYS</small></div>
-    <div class="sub">Free 7-day trial · Then buy once in the app ($3.99) · No subscription<br>For iPad and iPhone Duo (OS version 27.2 or later)</div>
+    <div class="credit">$3.99<small> / ¥600</small></div>
+    <div class="sub">1 COIN · Buy once · No subscription<br>For iPad and iPhone Duo (OS version 27.2 or later)</div>
     <div><span class="start">COMING SOON · App Store</span></div>
   </section>
 </main>'''
@@ -190,7 +190,7 @@ MAIL = '<a href="mailto:contact@tengaira.com" style="color:inherit">contact@teng
 sup_ja = sub_main([
  ('SUPPORT', 'SUPPORT · <b>CONTINUE?</b>', 'お気軽に、<br>ご連絡ください', 'ご質問、不具合のご報告、ご意見をお待ちしています。日本語でも英語でもかまいません。',
   [('CONTACT', MAIL, '不具合のときは、お使いの機種（iPad の型・iPhone Duo）、OS の版、縦か横か、どの面で起きたかを添えてください。'),
-   ('提供者', 'Tengaira（Hideto Minegishi）', 'Dual Wield Keyboard は App Store で無料で配り、7 日間の無料体験の後、アプリの中で 1 回だけ購入していただきます（日本 600 円・米国 $3.99）。')], ''),
+   ('提供者', 'Tengaira（Hideto Minegishi）', 'Dual Wield Keyboard は App Store で、日本では 600 円、米国では $3.99 の買い切りで提供します。')], ''),
  ('SUPPORT', 'HOW TO PLAY', 'よくある質問', '',
   [('Q1 · 入れ方', 'キーボードが出てきません。', '設定 → 一般 → キーボード → キーボード → 新しいキーボードを追加 から、Dual Wield Keyboard を選んでください。そのあと、文字を打つ欄でキーボードの地球儀を長押しし、一覧から Dual Wield Keyboard を選びます。アプリの「使い方と設定の手順を見る」でも同じ手順を見られます。'),
    ('Q2 · フルアクセス', '「フルアクセスを許可」は入れるべきですか？', '入れなくてかまいません。このキーボードはフルアクセスを求めず、なしですべての働きが使えます。'),
@@ -198,14 +198,14 @@ sup_ja = sub_main([
    ('Q4 · 変換', 'よく使う言葉を覚えてくれません。', 'そういう作りです。打った読みと確定した言葉を書き残さないため、変換の学習をしません。'),
    ('Q5 · 打った字', '打った字は、どこかへ送られますか？', '送られません。キーボードは通信をせず、かな漢字変換も端末の中で行います。くわしくはプライバシーポリシーをご覧ください。'),
    ('Q6 · 地球儀', 'キーボードの中に地球儀がありません。', '地球儀をキーボードの下に出す機種では、そちらの地球儀を使ってください。その機種では、キーボードの中には出しません。'),
-   ('Q7 · 無料体験と購入', '無料体験と購入は？', 'アプリは無料です。アプリの中で 7 日間の無料体験を始められ、その後も使うには、アプリの中で 1 回だけ購入します（600 円）。月額はありません。購入と返金は Apple が扱います。返金は reportaproblem.apple.com からお申し込みください。')], ''),
+   ('Q7 · 支払いと返金', '支払いと返金は？', '代金は App Store で払います。月額や追加の購入はありません。返金は Apple が扱うので、reportaproblem.apple.com からお申し込みください。')], ''),
  ('PRIVACY', 'PRIVACY', 'データの扱い', '', [], '    <div style="margin-top:32px"><a class="start" href="privacy.ja.html">プライバシーポリシーを読む →</a></div>\n'),
 ]).replace('{DOT}', '。')
 
 sup_en = sub_main([
  ('SUPPORT', 'SUPPORT · <b>CONTINUE?</b>', 'Questions?<br>Just ask', 'Questions, bug reports, and feedback are all welcome, in English or Japanese.',
   [('CONTACT', MAIL, 'For a bug, please include your device (which iPad, or iPhone Duo), the OS version, portrait or landscape, and which layout you were using.'),
-   ('PROVIDED BY', 'Tengaira (Hideto Minegishi)', 'Dual Wield Keyboard is free to download. After a free 7-day trial, you buy it once in the app ($3.99 in the U.S., ¥600 in Japan).')], ''),
+   ('PROVIDED BY', 'Tengaira (Hideto Minegishi)', 'Dual Wield Keyboard is a one-time purchase on the App Store: $3.99 in the U.S. and ¥600 in Japan.')], ''),
  ('SUPPORT', 'HOW TO PLAY', 'Frequently asked questions', '',
   [('Q1 · SETUP', 'The keyboard doesn’t show up.', 'Go to Settings → General → Keyboard → Keyboards → Add New Keyboard, and choose Dual Wield Keyboard. Then, in any text field, touch and hold the globe key and pick Dual Wield Keyboard from the list. The app’s setup guide walks through the same steps.'),
    ('Q2 · FULL ACCESS', 'Should I turn on “Allow Full Access”?', 'No need. The keyboard never asks for Full Access, and every feature works without it.'),
@@ -213,17 +213,17 @@ sup_en = sub_main([
    ('Q4 · CONVERSION', 'It doesn’t learn the words I use often.', 'That’s by design. It never stores what you type or the words you pick, so conversion doesn’t learn.'),
    ('Q5 · WHAT YOU TYPE', 'Is what I type sent anywhere?', 'No. The keyboard never uses the network, and Japanese conversion runs on your device. See the Privacy Policy for details.'),
    ('Q6 · GLOBE KEY', 'There’s no globe key on the keyboard.', 'On devices that show a globe key below the keyboard, use that one. On those devices the keyboard doesn’t show its own.'),
-   ('Q7 · TRIAL AND PURCHASE', 'How do the trial and purchase work?', 'The app is free. Start a free 7-day trial in the app; to keep using it, buy it once in the app ($3.99). No subscription. Apple handles purchases and refunds; request a refund at reportaproblem.apple.com.')], ''),
+   ('Q7 · PAYMENT AND REFUNDS', 'How do payment and refunds work?', 'You pay once on the App Store. There’s no subscription and nothing else to buy. Refunds are handled by Apple at reportaproblem.apple.com.')], ''),
  ('PRIVACY', 'PRIVACY', 'Your data', '', [], '    <div style="margin-top:32px"><a class="start" href="privacy.html">Read the Privacy Policy →</a></div>\n'),
 ]).replace('{DOT}', '.')
 
 pri_ja = sub_main([
  ('PRIVACY', 'PRIVACY POLICY · 2026-11-25 から適用', '打った字は、<br>端末から出ない',
   'Dual Wield Keyboard（本体アプリとキーボード）が扱うデータについて書きます。提供者は Tengaira（Hideto Minegishi）です。',
-  [('01 · 集めるデータ', 'ありません。', 'キーボードは通信をしません。本体アプリが通信するのは、無料体験と購入の手続きのときだけで、その手続きは Apple の App Store が行います。打った字・読み・確定した言葉・使い方の記録を、端末の外へ送ることはありません。分析や広告のための道具も入っていません。'),
+  [('01 · 集めるデータ', 'ありません。', '本体アプリもキーボードも、通信をしません。打った字・読み・確定した言葉・使い方の記録を、端末の外へ送ることはありません。分析や広告のための道具も入っていません。'),
    ('02 · フルアクセス', '求めません。', 'キーボードは「フルアクセスを許可」なしで働きます。そのため、キーボードは通信できません。'),
    ('03 · 変換', '端末の中だけで。', 'かな漢字変換は、アプリに入っている Mozc と辞書で、端末の中で行います。変換の学習はしません。打った読みと確定した言葉は書き残しません。'),
-   ('04 · 端末に残すもの', '設定と、ゲームの記録だけ。', 'キーボード: 左右の入れ替え、画面の広さごとに選んだ打ち方（フリックか QWERTY）、変換の設定のファイル（学習の中身は空）。本体アプリ: はじめての案内を終えたか、早打ちのゲームの自己ベスト（秒）と区切りの時刻、面をクリアしたか。無料体験の終わる日時と、購入したか（キーボードが読めるよう、本体アプリとキーボードの共有の置き場に置く）。どれも、あなたが打った文は含みません。'),
+   ('04 · 端末に残すもの', '設定と、ゲームの記録だけ。', 'キーボード: 左右の入れ替え、画面の広さごとに選んだ打ち方（フリックか QWERTY）、変換の設定のファイル（学習の中身は空）。本体アプリ: はじめての案内を終えたか、早打ちのゲームの自己ベスト（秒）と区切りの時刻、面をクリアしたか。どれも、あなたが打った文は含みません。'),
    ('05 · 第三者', '渡しません。', 'データを第三者に渡すことはありません。購入と支払いは App Store で行われ、Apple のプライバシーポリシーに従います。'),
    ('06 · 消し方', 'アプリを消せば、消えます。', '端末に残すものは、Dual Wield Keyboard を端末から削除すると、すべて消えます。キーボードだけを止めるには、設定 → 一般 → キーボード → キーボード から外してください。私たちは、あなたのデータを何も持っていません。そのため、消去の申し出は要りません。'),
    ('07 · 変更と連絡先', '変えるときは、ここで知らせます。', 'このポリシーを変えるときは、このページを更新し、適用の日付を改めます。ご質問は contact@tengaira.com へ。')], ''),
@@ -232,10 +232,10 @@ pri_ja = sub_main([
 pri_en = sub_main([
  ('PRIVACY', 'PRIVACY POLICY · EFFECTIVE NOV 25, 2026', 'What you type<br>stays on your device',
   'This policy covers the data handled by Dual Wield Keyboard (the app and its keyboard). Dual Wield Keyboard is provided by Tengaira (Hideto Minegishi).',
-  [('01 · DATA WE COLLECT', 'None.', 'The keyboard never uses the network. The app connects only for the free trial and purchase, which are handled by Apple’s App Store. Nothing you type, no readings, no words you pick, and no usage records ever leave your device. There are no analytics or advertising tools.'),
+  [('01 · DATA WE COLLECT', 'None.', 'Neither the app nor the keyboard uses the network. Nothing you type, no readings, no words you pick, and no usage records ever leave your device. There are no analytics or advertising tools.'),
    ('02 · FULL ACCESS', 'Never requested.', 'The keyboard works without “Allow Full Access”, so it cannot use the network.'),
    ('03 · CONVERSION', 'On your device only.', 'Japanese conversion runs on your device, using Mozc and the dictionary bundled with the app. Conversion doesn’t learn, and what you type and the words you pick are never stored.'),
-   ('04 · WHAT STAYS ON YOUR DEVICE', 'Settings and game records only.', 'Keyboard: the left/right swap, the typing style you chose for each screen width (flick or QWERTY), and the conversion settings files (with no learned data). App: whether you finished the first-run guide, your best time in the typing game and its split times, and which stages you cleared. Also the end date of your free trial and whether you bought the app (kept in a container shared by the app and the keyboard, so the keyboard can read it). None of these include anything you typed.'),
+   ('04 · WHAT STAYS ON YOUR DEVICE', 'Settings and game records only.', 'Keyboard: the left/right swap, the typing style you chose for each screen width (flick or QWERTY), and the conversion settings files (with no learned data). App: whether you finished the first-run guide, your best time in the typing game and its split times, and which stages you cleared. None of these include anything you typed.'),
    ('05 · THIRD PARTIES', 'Nothing is shared.', 'We don’t share any data with third parties. Purchases and payments happen on the App Store under Apple’s privacy policy.'),
    ('06 · DELETING YOUR DATA', 'Delete the app, and it’s gone.', 'Everything stored on your device is removed when you delete Dual Wield Keyboard. To stop using just the keyboard, remove it in Settings → General → Keyboard → Keyboards. We don’t hold any of your data, so there’s nothing to request for deletion.'),
    ('07 · CHANGES AND CONTACT', 'Changes are posted here.', 'If this policy changes, we’ll update this page and its effective date. Questions: contact@tengaira.com.')], ''),
