@@ -602,7 +602,8 @@
   // 縦は画面の下半分だけ（0.5〜0.92）
   const clampY = y => Math.min(0.92, Math.max(0.5, y));
   const shots = [], keys = [], sparks = [];
-  const KANA = 'あかさたなはまやらわ';
+  // 落ちてくる的の字: 日本語のページはかな、英語のページは英字（ページの言語で分ける）
+  const KANA = document.documentElement.lang === 'en' ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : 'あかさたなはまやらわ';
   let hits = 0, lastSide = 'right';
   const hitsLabel = document.getElementById('hud-hits');
   const LEFT_KEYS = new Set('`12345qwertasdfgzxcvb'.split(''));
